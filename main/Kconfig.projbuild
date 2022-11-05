@@ -1,0 +1,52 @@
+menu "Example Configuration"
+
+    config EXAMPLE_MDNS_HOST_NAME
+        string "mDNS Host Name"
+        default "rotator"
+        help
+            Specify the domain name used in the mDNS service.
+            Note that webpage also take it as a part of URL where it will send GET/POST requests to.
+
+    config EXAMPLE_WEB_MOUNT_POINT
+        string "Website mount point in VFS"
+        default "/www"
+        help
+            Specify the mount point in VFS.
+            
+    config ESP_WIFI_AP_SSID
+        string "WiFi AP SSID"
+        default "SPORADIC_ROTATOR"
+        help
+            SSID (network name) to start.
+            
+    config ESP_WIFI_PASSWORD
+        string "WiFi Password"
+        default "12345678"
+        help
+            WiFi password (LEAVE EMPTY IF AUTH OPEN).
+    
+    config ESP_WIFI_CHANNEL
+        int "WiFi Channel"
+        range 1 13
+        default 1
+        help
+            WiFi channel (network channel).
+
+    config ESP_MAX_CONN
+        int "Maximal connections"
+        range 1 10
+        default 4
+        help
+            Max number of connected devices.
+
+    config STEPPER_STEPS_PER_ROTATION
+        int "Steps per one rotation with no microstep"
+        default 200
+	config STEPPER_MICROSTEP
+        int "Microstepping value"
+        default 16
+    config STEPPER_GEAR_RATIO
+        int "Gear ratio"
+        default 1
+        
+endmenu
