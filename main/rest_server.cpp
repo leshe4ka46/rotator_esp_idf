@@ -18,7 +18,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs_logic.c"
-
+#include "DendoStepper.h"
+#include "sdkconfig.h"
+#include "esp_idf_version.h"
 static const char *REST_TAG = "esp-rest";
 #define REST_CHECK(a, str, goto_tag, ...)                                              \
     do                                                                                 \
@@ -39,7 +41,6 @@ typedef struct rest_server_context {
 } rest_server_context_t;
 
 #define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
-
 /* Set HTTP response content type according to file extension */
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath)
 {
@@ -62,7 +63,7 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
     }
     return httpd_resp_set_type(req, type);
 }
-
+char filter[10];
 /* Send HTTP response with the contents of the requested file */
 static esp_err_t rest_common_get_handler(httpd_req_t *req)
 {
@@ -74,6 +75,13 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
         strlcat(filepath, "/upd.html", sizeof(filepath));
     } else {
         strlcat(filepath, req->uri, sizeof(filepath));
+    }
+    sprintf(filter,"%.9s", filepath);
+    if(strcmp(filter,"/www/mcfg")==0){
+    	 httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
+    	 printf(filter);
+    	 printf(" -- yandex fix\r\n");
+    	 return ESP_FAIL;
     }
     //printf(filepath);
     /*if (CHECK_FILE_EXTENSION(filepath,".gz") == 0) {
@@ -172,7 +180,7 @@ static esp_err_t system_info_get_handler(httpd_req_t *req)
     cJSON *root = cJSON_CreateObject();
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
-    cJSON_AddStringToObject(root, "version", IDF_VER);
+    cJSON_AddStringToObject(root, "version", esp_get_idf_version());
     cJSON_AddNumberToObject(root, "cores", chip_info.cores);
     cJSON_AddNumberToObject(root, "revision", chip_info.revision);
     const char *sys_info = cJSON_Print(root);
@@ -183,8 +191,7 @@ static esp_err_t system_info_get_handler(httpd_req_t *req)
 }
 //------------------------------STEPPER----------
 
-#include "DendoStepper.h"
-#include "sdkconfig.h"
+
 int32_t angleX=0,angleY=0,newangleX=0,newangleY=0;
 float delta_angleX=0,delta_angleY=0;
 #define STEPS_PER_ROTATION CONFIG_STEPPER_STEPS_PER_ROTATION
@@ -451,7 +458,7 @@ static esp_err_t delta_angle(httpd_req_t *req)
     cJSON *root = cJSON_Parse(buf);
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 	int azimut = cJSON_GetObjectItem(root, "azimut")->valueint;
-	int elevation = cJSON_GetObjectItem(root, "elevation")->valueint;
+	//int elevation = cJSON_GetObjectItem(root, "elevation")->valueint;
 
 
     if(is_admin(key)==77){
@@ -473,11 +480,11 @@ extern "C" esp_err_t start_rest_server(const char *base_path)
 	rest_server_context_t *rest_context = (rest_server_context_t*)calloc(1, sizeof(rest_server_context_t));
     //REST_CHECK(rest_context, "No memory for rest context");
     strlcpy(rest_context->base_path, base_path, sizeof(rest_context->base_path));
-
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.max_uri_handlers = 12;
+    config.lru_purge_enable = true;
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
     //REST_CHECK(httpd_start(&server, &config) == ESP_OK, "Start server failed");
