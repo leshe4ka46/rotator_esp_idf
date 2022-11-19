@@ -120,6 +120,7 @@ export default {
     bus.$on('get_admin', () => {
       bus.$emit('is_admin', this.is_admin ? 1 : 0)
     })
+    //setInterval(() => this.checkadmin(),10000)
   }
 }
 </script>
