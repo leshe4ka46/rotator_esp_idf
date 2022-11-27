@@ -1,7 +1,7 @@
 //const CompressionWebpackPlugin = require('compression-webpack-plugin');
 
 module.exports = {
-  /*devServer: {
+  devServer: {
     proxy: {
         '/api': {
             target: 'http://192.168.4.1:80/',
@@ -9,7 +9,7 @@ module.exports = {
             ws: true
         }
     }
-  },*/
+  },
   productionSourceMap: false,
   filenameHashing: false,
   css: {

@@ -6,11 +6,13 @@
 
           <v-card-title primary-title>
             <div class="ma-auto">
-              <span class="grey--text">IDF version: {{version}}</span>
+              <span class="grey--text">Версия IDF: {{version}}</span>
               <br>
-              <span class="grey--text">ESP cores: {{cores}}</span>
+              <span class="grey--text">Ядер ESP32: {{cores}}</span>
               <br>
-              <span class="grey--text">ESP revision: {{revision}}</span>
+              <span class="grey--text">Версия ESP32: {{revision}}</span>
+              <br>
+              <span class="grey--text">Версия: 1.0.1</span>
             </div>
           </v-card-title>
         </v-card>

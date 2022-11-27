@@ -18,10 +18,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs_logic.c"
-#include "DendoStepper.h"
 #include "sdkconfig.h"
 #include "esp_idf_version.h"
+#include "stepper_logic.c"
+#include "esp_chip_info.h"
 static const char *REST_TAG = "esp-rest";
+
 #define REST_CHECK(a, str, goto_tag, ...)                                              \
     do                                                                                 \
     {                                                                                  \
@@ -156,24 +158,6 @@ esp_err_t get_buf_from_request(httpd_req_t *req,char *buf){
 }
 
 
-/* Simple handler for light brightness control */
-/*static esp_err_t light_brightness_post_handler(httpd_req_t *req)
-{
-    char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
-	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
-
-    cJSON *root = cJSON_Parse(buf);
-    int red = cJSON_GetObjectItem(root, "red")->valueint;
-    int green = cJSON_GetObjectItem(root, "green")->valueint;
-    int blue = cJSON_GetObjectItem(root, "blue")->valueint;
-    ESP_LOGI(REST_TAG, "Light control: red = %d, green = %d, blue = %d", red, green, blue);
-    cJSON_Delete(root);
-    httpd_resp_sendstr(req, "Post control value successfully");
-    return ESP_OK;
-}
-*/
-/* Simple handler for getting system handler */
-
 static esp_err_t system_info_get_handler(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "application/json");
@@ -192,7 +176,7 @@ static esp_err_t system_info_get_handler(httpd_req_t *req)
 //------------------------------STEPPER----------
 
 
-int32_t angleX=0,angleY=0,newangleX=0,newangleY=0;
+//int32_t angleX=0,angleY=0,newangleX=0,newangleY=0;
 float delta_angleX=0,delta_angleY=0;
 #define STEPS_PER_ROTATION CONFIG_STEPPER_STEPS_PER_ROTATION
 #define STEPPERS_MICROSTEP CONFIG_STEPPER_MICROSTEP
@@ -202,80 +186,39 @@ int32_t angle_to_steps(float angle) {
   return angle * STEPS_PER_ROTATION * STEPPERS_MICROSTEP * STEPPERS_GEAR_RATIO / 360;
 }
 
-int32_t delta;//,local_angle;
+/*int32_t delta;//,local_angle;
 int32_t getpos(int32_t local_angle, uint8_t motor){  //motor: x--0 y--1
 	//local_angle=angle_to_steps(angle);
 	if (motor==0){
 		delta=local_angle-angleX;
 		angleX=local_angle;
-		printf("motor:%d oldpos:%d  pos:%d \r\n",motor,angleX,newangleX);
+		printf("motor:%d oldpos:%ld  pos:%ld \r\n",motor,angleX,newangleX);
 
 
 	}
 	if (motor==1){
 		delta=local_angle-angleY;
 		angleY=local_angle;
-		printf("motor:%d oldpos:%d  pos:%d \r\n",motor,angleY,newangleY);
+		printf("motor:%d oldpos:%ld  pos:%ld \r\n",motor,angleY,newangleY);
 	}
-	printf("delta:%d\r\n",delta);
+	printf("delta:%ld\r\n",delta);
 	return delta;
 }
-DendoStepper stepX;
-DendoStepper stepY;
-void set_stepper_speedX(){
-	stepX.setSpeed(16*200*10, 1500, 1500);
-}
-void set_stepper_speedY(){
-	stepY.setSpeed(16*200*10, 1500, 1500);
-}
-esp_err_t init_steppers(){
-	DendoStepper_config_t stepX_cfg = {
-	        .stepPin = 17,
-	        .dirPin = 18,
-	        .enPin = 4,
-	        .timer_group = TIMER_GROUP_0,
-	        .timer_idx = TIMER_0,
-	        .miStep = MICROSTEP_1,
-	        .stepAngle = 1.8};
-
-	    DendoStepper_config_t stepY_cfg = {
-	        .stepPin = 15,
-	        .dirPin = 16,
-	        .enPin = 5,
-	        .timer_group = TIMER_GROUP_1,
-	        .timer_idx = TIMER_1,
-	        .miStep = MICROSTEP_1,
-	        .stepAngle = 1.8};
-
-	    stepX.config(&stepX_cfg);
-	    stepY.config(&stepY_cfg);
-
-	    stepX.init();
-	    stepY.init();
-
-	    set_stepper_speedX();
-	    set_stepper_speedY();
-	    return ESP_OK;
-}
+*/
 
 static esp_err_t rotate_angle(httpd_req_t *req)
 {
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
-
-	printf("%s\r\n",buf);
 	cJSON *root = cJSON_Parse(buf);
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 	int azimut = cJSON_GetObjectItem(root, "azimut")->valueint;
 	int elevation = cJSON_GetObjectItem(root, "elevation")->valueint;
 
 	if(is_admin(key)==77){
-		newangleX=angle_to_steps((float)azimut/100-delta_angleX);
-		newangleY=angle_to_steps((float)elevation/100);
-		printf("angles: %d %d \r\n",newangleX,newangleY);
-		//stepX.runPos(getpos((float)azimuth/100,0));
-		//stepY.runPos(getpos((float)elevation/100,1));
-		//set_angle(azimuth,elevation);
+		absolute_stepper(0,angle_to_steps((float)azimut/100-delta_angleX));
+		absolute_stepper(1,angle_to_steps((float)elevation/100-delta_angleY));
+		printf("angles: %f %f \r\n",(float)azimut/100,(float)elevation/100);
 	}
 
 	cJSON_Delete(root);
@@ -283,47 +226,8 @@ static esp_err_t rotate_angle(httpd_req_t *req)
     return ESP_OK;
 }
 
-
-
-void steppers_task(void *pvParameter)
-{
-	while(1){
-		if(newangleX!=angleX and stepX.getState()<=IDLE and stepY.getState()<=IDLE){
-			stepX.runPos(getpos(newangleX,0));
-			angleX=newangleX;
-			//printf("anglesX: %d %d delta:%d \r\n",newangleX,newangleY,delta);
-		}
-		if(newangleY!=angleY and stepX.getState()<=IDLE and stepY.getState()<=IDLE){
-			stepY.runPos(getpos(newangleY,1));
-			angleY=newangleY;
-			//printf("anglesY: %d %d \r\n",newangleX,newangleY);
-		}
-		if(stepX.getState()<=IDLE and stepX.isspeedmodified()){
-			set_stepper_speedX();
-		}
-		if(stepY.getState()<=IDLE and stepY.isspeedmodified()){
-			set_stepper_speedY();
-		}
-		vTaskDelay(pdMS_TO_TICKS(10));
-	}
-}
-
-
-
-
-
 /* Simple handler for getting temperature data */
-static esp_err_t temperature_data_get_handler(httpd_req_t *req)
-{
-    httpd_resp_set_type(req, "application/json");
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, "raw", esp_random() % 20);
-    const char *sys_info = cJSON_Print(root);
-    httpd_resp_sendstr(req, sys_info);
-    free((void *)sys_info);
-    cJSON_Delete(root);
-    return ESP_OK;
-}
+
 
 static esp_err_t adduser(httpd_req_t *req)
 {
@@ -338,25 +242,20 @@ static esp_err_t adduser(httpd_req_t *req)
     httpd_resp_sendstr(req, "OK");
     return ESP_OK;
 }
-/*char out[70];
-uint16_t a,b,c;*/
+
 static esp_err_t anglesdatatx(httpd_req_t *req)
 {
 	 httpd_resp_set_type(req, "application/json");
 	cJSON *root = cJSON_CreateObject();
 	cJSON_AddNumberToObject(root, "azimut", as5600_getAngleX()+delta_angleX);
-	cJSON_AddNumberToObject(root, "elevation", 0);
+	cJSON_AddNumberToObject(root, "elevation", as5600_getAngleY()+delta_angleY);
 	cJSON_AddNumberToObject(root, "voltage", 12.55);
-	cJSON_AddNumberToObject(root, "setted_azimut", (float)stepX.getPosition()/200/16*360+delta_angleX);
-	cJSON_AddNumberToObject(root, "setted_elevation", (float)stepY.getPosition()/200/16*360);
+	cJSON_AddNumberToObject(root, "setted_azimut", (float)get_pos(0)/*stepX.getPosition()*//200/16*360+delta_angleX);
+	cJSON_AddNumberToObject(root, "setted_elevation", (float)get_pos(1)/*stepY.getPosition()*//200/16*360+delta_angleY);
 	const char *sys_info = cJSON_Print(root);
 	httpd_resp_sendstr(req, sys_info);
 	free((void *)sys_info);
 	cJSON_Delete(root);
-	/*
-	memset(out,0,sizeof(out));
-	sprintf(out,"{ \"azimut\": %d, \"elevation\": %d, \"voltage\": %d }",(int)as5600_getAngleX()*100,b,c);
-	httpd_resp_sendstr(req, out);*/
     return ESP_OK;
 }
 static esp_err_t authuser(httpd_req_t *req)
@@ -433,12 +332,10 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 
 static esp_err_t setXnull(httpd_req_t *req)
 {
-
     char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
-
     if(is_admin(key)==77){
     	set_zero_X();
     	httpd_resp_sendstr(req, "OK");
@@ -446,7 +343,23 @@ static esp_err_t setXnull(httpd_req_t *req)
     else{
     	httpd_resp_sendstr(req, "No");
     }
+    cJSON_Delete(root);
+    return ESP_OK;
+}
 
+static esp_err_t setYnull(httpd_req_t *req)
+{
+    char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+    ESP_ERROR_CHECK(get_buf_from_request(req,buf));
+    cJSON *root = cJSON_Parse(buf);
+    const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
+    if(is_admin(key)==77){
+    	set_zero_Y();
+    	httpd_resp_sendstr(req, "OK");
+    }
+    else{
+    	httpd_resp_sendstr(req, "No");
+    }
     cJSON_Delete(root);
     return ESP_OK;
 }
@@ -458,12 +371,13 @@ static esp_err_t delta_angle(httpd_req_t *req)
     cJSON *root = cJSON_Parse(buf);
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 	int azimut = cJSON_GetObjectItem(root, "azimut")->valueint;
-	//int elevation = cJSON_GetObjectItem(root, "elevation")->valueint;
+	int elevation = cJSON_GetObjectItem(root, "elevation")->valueint;
 
 
     if(is_admin(key)==77){
     	delta_angleX=(float)azimut/100;
-    	printf("newdeltaX:%f \r\n",delta_angleX);
+    	delta_angleY=(float)elevation/100;
+    	printf("newdeltaX:%f %f\r\n",delta_angleX,delta_angleY);
     	httpd_resp_sendstr(req, "OK");
     }
     else{
@@ -473,7 +387,7 @@ static esp_err_t delta_angle(httpd_req_t *req)
     cJSON_Delete(root);
     return ESP_OK;
 }
-extern "C" esp_err_t start_rest_server(const char *base_path)
+esp_err_t start_rest_server(const char *base_path)
 {
 	init_nvs();
     //REST_CHECK(base_path, "wrong base path");
@@ -541,13 +455,7 @@ extern "C" esp_err_t start_rest_server(const char *base_path)
     httpd_register_uri_handler(server, &data_angles_post_uri);
 
 
-    httpd_uri_t temperature_data_get_uri = {
-				.uri = "/api/v1/temp/raw",
-				.method = HTTP_GET,
-				.handler = temperature_data_get_handler,
-				.user_ctx = rest_context
-			};
-    httpd_register_uri_handler(server, &temperature_data_get_uri);
+
 
 
     httpd_uri_t data_set_angles_uri = {
@@ -567,24 +475,23 @@ extern "C" esp_err_t start_rest_server(const char *base_path)
 	httpd_register_uri_handler(server, &data_set_currentangles_uri);
 
     httpd_uri_t data_set_nullX_uri = {
-    				.uri = "/api/v1/data/set/nullX",
-    				.method = HTTP_POST,
-    				.handler = setXnull,
-    				.user_ctx = rest_context
-    			};
-        httpd_register_uri_handler(server, &data_set_nullX_uri);
+				.uri = "/api/v1/data/set/nullX",
+				.method = HTTP_POST,
+				.handler = setXnull,
+				.user_ctx = rest_context
+			};
+	httpd_register_uri_handler(server, &data_set_nullX_uri);
 
+	httpd_uri_t data_set_nullY_uri = {
+				.uri = "/api/v1/data/set/nullY",
+				.method = HTTP_POST,
+				.handler = setYnull,
+				.user_ctx = rest_context
+			};
+	httpd_register_uri_handler(server, &data_set_nullY_uri);
 
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
 
-    /* URI handler for light brightness control */
-    /*httpd_uri_t light_brightness_post_uri = {
-        .uri = "/api/v1/light/brightness",
-        .method = HTTP_POST,
-        .handler = light_brightness_post_handler,
-        .user_ctx = rest_context
-    };
-    httpd_register_uri_handler(server, &light_brightness_post_uri);*/
 
     /* URI handler for getting web server files */
     httpd_uri_t common_get_uri = {
@@ -595,12 +502,9 @@ extern "C" esp_err_t start_rest_server(const char *base_path)
     };
     httpd_register_uri_handler(server, &common_get_uri);
 
+
     init_steppers();
-    //steppers_loop();
-    xTaskCreatePinnedToCore(&steppers_task, "steppers_task", 1024*3, NULL, 5, NULL,1);
-
-
-    init_i2c(6,7);
+    init_i2c(7,6,19,8);
     start_monitoring_AS5600();
     return ESP_OK;
 

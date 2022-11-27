@@ -1,9 +1,12 @@
 <template>
   <v-container>
-    <v-btn depressed color="primary" @click="zeroaxes">
+    <v-btn depressed color="primary" @click="zeroaxesX">
       Сбросить значение граусов Х
     </v-btn>
-    <v-sheet color="white" title="DH">
+    <v-btn depressed color="primary" @click="zeroaxesY">
+      Сбросить значение граусов Y
+    </v-btn>
+    <v-sheet color="white">
       <v-text-field label="Азимут" v-model="azimut" type="number" @keyup.enter.exact="sendangles" />
       <v-text-field label="Элевация" v-model="elevation" type="number" @keyup.enter.exact="sendangles" />
       <v-btn tile color="success" @click="sendangles">
@@ -24,9 +27,15 @@ export default {
   },
 
   methods: {
-    zeroaxes() {
+    zeroaxesX() {
       this.$ajax
         .post('/api/v1/data/set/nullX', {
+          key: localStorage.getItem('rotator_client_id')
+        })
+    },
+    zeroaxesY() {
+      this.$ajax
+        .post('/api/v1/data/set/nullY', {
           key: localStorage.getItem('rotator_client_id')
         })
     },

@@ -1,35 +1,18 @@
 <template>
-  <!--<div class="card has-text-left">
-    <div class="card-content" v-if="auth_needed">
-      <b-field label="Username" :type="isLoginLabelDanger">
-        <b-input value="" maxlength="30" v-model="login"></b-input>
-      </b-field>
-
-      <b-field label="Password" :type="isPassLabelDanger">
-        <b-input type="password" value="" v-model="password" password-reveal>
-        </b-input>
-      </b-field>
-      <b-field>
-        <b-button label="Auth" type="is-info" @click="send" />
-      </b-field>
-
-    </div>
-  </div>-->
-
   <div class="d-flex justify-center">
     <v-card flat max-width="500px">
       <v-card-title primary-title>
-        <h4>Login</h4>
+        <h4>Вход</h4>
       </v-card-title>
       <div class="container">
         <v-form>
-          <v-text-field name="Username" label="Username" v-model="login" :error="err_input_login"
+          <v-text-field label="Логин" v-model="login" :error="err_input_login"
             :rules="[() => !!login || 'Тут нужно что-то написать']" required></v-text-field>
-          <v-text-field name="Password" label="Password" type="password" v-model="password" :error="err_input_password"
+          <v-text-field label="Пароль" type="password" v-model="password" :error="err_input_password"
             :rules="[() => !!password || 'Тут нужно что-то написать']" required @keypress.enter.exact="send">
           </v-text-field>
           <v-card-actions>
-            <v-btn primary large block @click="send" :loading="login_loading">Login</v-btn>
+            <v-btn primary large block @click="send" :loading="login_loading">Вход</v-btn>
           </v-card-actions>
         </v-form>
       </div>
@@ -52,11 +35,6 @@ export default {
       err_input_password:false
     }
   },
-  watch: {
-    /*is_admin(val) {
-      bus.$emit('is_admin', val ? 1 : 0)
-    }*/
-  },
   methods: {
     send() {
       this.login_loading = true
@@ -70,9 +48,6 @@ export default {
       }
       this.err_input_login=false;
       this.err_input_password=false;
-
-      // eslint-disable-next-line
-      //console.log(this.color_data);
       this.$ajax
         .post('/api/v1/users/auth', {
           login: this.login,
@@ -124,8 +99,3 @@ export default {
   }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-
-</style>

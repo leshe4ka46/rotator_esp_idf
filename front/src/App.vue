@@ -8,7 +8,7 @@
               <MdiSvg>{{ mdiHome }}</MdiSvg>
             </v-list-tile-action>
             <v-list-tile-content>
-              <v-list-tile-title>Home</v-list-tile-title>
+              <v-list-tile-title>Информация</v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
 
@@ -17,7 +17,7 @@
               <MdiSvg>{{ mdiChartBoxOutline }}</MdiSvg>
             </v-list-tile-action>
             <v-list-tile-content>
-              <v-list-tile-title>Data</v-list-tile-title>
+              <v-list-tile-title>Данные</v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
           <!--<v-list-tile to="/light" v-if="is_admin==true">
@@ -66,9 +66,11 @@
         </v-card>
       </v-dialog>
       <v-content>
-        <v-container center fill-height>
-          <router-view :key="$route.path" style="font-size: 1.2em;"></router-view>
-        </v-container>
+          <v-container fill-height center>
+            <keep-alive>
+              <router-view :key="$route.path" style="font-size: 1.2em;"></router-view>
+            </keep-alive>
+          </v-container>
       </v-content>
     </v-app>
   </div>
@@ -154,8 +156,8 @@ export default {
       if (this.is_admin == true) {
         this.drawer = !this.drawer
       }
-      else{
-        this.login_dialog=true;
+      else {
+        this.login_dialog = true;
       }
     },
     makeid(length) {
@@ -171,3 +173,9 @@ export default {
 
 }
 </script>
+
+<style>
+body::-webkit-scrollbar {
+  width: 0px;
+}
+</style>

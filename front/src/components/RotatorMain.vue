@@ -12,7 +12,7 @@
               <span class="grey--text">Элевация</span>
               <br>
               <h1><span class="black--text">{{ battery }} B</span></h1>
-              <span class="grey--text">Напряжение батареи</span>
+              <span class="grey--text">Напряжение на батарее</span>
               <br>
               <h3><span class="black--text">{{ setted_azimut }}&deg; {{ setted_elevation }}&deg;</span></h3>
               <span class="grey--text">Заданные значения</span>
@@ -24,13 +24,9 @@
       </v-flex>
     </v-layout>
 
-    <v-snackbar v-model="alert_axes" :timeout="0"  color="red accent-2">
-      Мотор, походу, не доехал до конца
-      <!--<template>
-        <v-btn color="red" text @click="alert_axes = false; alerting_done = true;">
-          Закрыть
-        </v-btn>
-      </template>-->
+    <v-snackbar v-model="alert_axes" :timeout="0" color="red accent-2">
+      Мотор не доехал до конца: {{ motors }}
+
     </v-snackbar>
   </div>
 </template>
@@ -51,8 +47,9 @@ export default {
       prev_elevation: 0,
       setted_elevation: 0,
       alert_axes: false,
-      alerting_done: false,
-      alert_times: 0,
+      motors: "",
+      alert_x: false,
+      alert_y: false
     }
   },
   created() {
@@ -97,22 +94,41 @@ export default {
     },
     check_angles() {
       bus.$emit('get_data_angles')
-
       if (Math.abs(this.prev_azimut - this.azimut) < 1) {
         if (Math.abs(this.azimut - this.setted_azimut) > 2) {
-          if (/*this.alerting_done == false && */this.alert_times != 0) {
-            this.alert_axes = true;
-          }
-          this.alert_times += 1
+          this.alert_x = true;
         }
         else {
-          this.alert_times = 0
-          this.alerting_done = false;
-          this.alert_axes = false;
+          this.alert_x = false;
         }
       }
 
+      if (Math.abs(this.prev_elevation - this.elevation) < 1) {
+        if (Math.abs(this.elevation - this.setted_elevation) > 2) {
+          this.alert_y = true;
+        }
+        else {
+          this.alert_y = false;
+        }
+      }
       this.prev_azimut = this.azimut
+      this.prev_elevation = this.elevation
+      if (this.alert_y + this.alert_x > 0) {
+        this.alert_axes = true;
+        this.motors = ""
+        if (this.alert_x) {
+          this.motors += "X"
+        }
+        if (this.alert_x & this.alert_y) {
+          this.motors += " и "
+        }
+        if (this.alert_y) {
+          this.motors += "Y"
+        }
+      }
+      else{
+        this.alert_axes = false;
+      }
 
     }
   }

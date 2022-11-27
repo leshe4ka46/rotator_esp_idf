@@ -3,14 +3,14 @@
       <v-tabs v-model="tab" fixed-tabs>
         <v-tabs-slider color="blue"></v-tabs-slider>
         <v-tab tab="0" style="font-size: 1em;">
-          Info
+          Информация
         </v-tab>
         <v-tab tab="1" style="font-size: 1em;">
-          Tools
+          Инструменты
         </v-tab>
-        <v-tab tab="2" style="font-size: 1em;">
-          Reset Data
-        </v-tab>
+        <!--<v-tab tab="2" style="font-size: 1em;">
+          Удаление данных
+        </v-tab>-->
         <!--<v-tab tab="3" style="font-size: 1em;">
           WiFi
         </v-tab>-->
@@ -29,11 +29,11 @@
             <RotatorTools></RotatorTools>
           </v-card>
         </v-tab-item>
-        <v-tab-item tab="2">
+        <!--<v-tab-item tab="2">
           <v-card flat>
             <RotatorReset_data></RotatorReset_data>
           </v-card>
-        </v-tab-item>
+        </v-tab-item>-->
         <!--<v-tab-item tab="3">
           <v-card flat>
             <RotatorWifi></RotatorWifi>

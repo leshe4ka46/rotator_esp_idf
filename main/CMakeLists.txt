@@ -1,8 +1,9 @@
 idf_component_register(SRCS "esp_rest_main.c" 
-                            "rest_server.cpp"
+                            "rest_server.c"
                             "nvs_logic.c"
                             "dnsServer.c"
-                            
+                            "stepper_motor_encoder.c" 
+                            "stepper_logic.c"
                     INCLUDE_DIRS ".")
 
 #if(CONFIG_EXAMPLE_WEB_DEPLOY_SF)
