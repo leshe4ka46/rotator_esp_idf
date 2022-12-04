@@ -4,4 +4,4 @@ set(CMAKE_CXX_STANDARD 17)
 set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_examples_common)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(restful_server)
+project(rotator_esp_idf)

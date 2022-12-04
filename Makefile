@@ -1,4 +1,4 @@
-PROJECT_NAME := restful_server
+PROJECT_NAME := rotator_esp_idf
 
 EXTRA_COMPONENT_DIRS = $(IDF_PATH)/examples/common_components/protocol_examples_common
 

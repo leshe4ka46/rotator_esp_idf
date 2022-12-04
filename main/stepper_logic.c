@@ -5,7 +5,7 @@
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "stepper_motor_encoder.h"
-
+#include "as5600_lib.c"
 #define STEP_MOTOR_GPIO_ENX       4
 #define STEP_MOTOR_GPIO_DIRX      18
 #define STEP_MOTOR_GPIO_STEPX     17
@@ -23,14 +23,16 @@
 uint32_t accel_samplesx = 3200;
 uint32_t uniform_speed_hzx = 30000;
 uint32_t decel_samplesx = 3200;
+uint32_t do_rotate_speed_hzx = 10000;
 
 uint32_t accel_samplesy = 3200;
 uint32_t uniform_speed_hzy = 30000;
 uint32_t decel_samplesy = 3200;
+uint32_t do_rotate_speed_hzy = 10000;
 
+uint8_t delta_stepper_pos=10;
 
-
-int32_t steps_X,curr_steps_X,steps_Y,curr_steps_Y;
+int32_t steps_X,curr_steps_X,read_steps_X,steps_Y,curr_steps_Y,read_steps_Y;
 uint8_t motorX_isReady=1,motorY_isReady=1;
 void stepperX_task(void *pvParameter)
 {
@@ -115,7 +117,18 @@ void stepperX_task(void *pvParameter)
 			ESP_ERROR_CHECK(rmt_tx_wait_all_done(motor_chan_x, -1));
 			motorX_isReady=1;
 		}
-		vTaskDelay(pdMS_TO_TICKS(100));
+		if(motorX_isReady==1){
+			read_steps_X=(as5600_getAngleXnolog(0)*200*16/360);
+			if(curr_steps_X<read_steps_X-delta_stepper_pos || curr_steps_X>read_steps_X+delta_stepper_pos){
+				tx_configX.loop_count = abs(curr_steps_X-read_steps_X);
+				ESP_LOGE("X stepper error", "curr_steps_X:%ld, read_steps_X:%ld delta:%d",curr_steps_X,read_steps_X,tx_configX.loop_count);
+				gpio_set_level(STEP_MOTOR_GPIO_DIRX, (read_steps_X<curr_steps_X)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
+
+				ESP_ERROR_CHECK(rmt_transmit(motor_chan_x, uniform_motor_encoderX, &do_rotate_speed_hzx, sizeof(do_rotate_speed_hzx), &tx_configX));
+				ESP_ERROR_CHECK(rmt_tx_wait_all_done(motor_chan_x, -1));
+			}
+		}
+		vTaskDelay(pdMS_TO_TICKS(50));
 	}
 }
 void stepperY_task(void *pvParameter)
@@ -201,7 +214,17 @@ void stepperY_task(void *pvParameter)
 			ESP_ERROR_CHECK(rmt_tx_wait_all_done(motor_chan_y, -1));
 			motorY_isReady=1;
 		}
-		vTaskDelay(pdMS_TO_TICKS(100));
+		if(motorY_isReady==1){
+			read_steps_Y=(as5600_getAngleYnolog(0)*200*16/360);
+			if(curr_steps_Y<read_steps_Y-delta_stepper_pos || curr_steps_Y>read_steps_Y+delta_stepper_pos){
+				tx_configY.loop_count = abs(curr_steps_Y-read_steps_Y);
+				ESP_LOGE("Y stepper error", "curr_steps_Y:%ld, read_steps_Y:%ld delta:%d",curr_steps_Y,read_steps_Y,tx_configY.loop_count);
+				gpio_set_level(STEP_MOTOR_GPIO_DIRY, (read_steps_Y<curr_steps_Y)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
+				ESP_ERROR_CHECK(rmt_transmit(motor_chan_y, uniform_motor_encoderY, &do_rotate_speed_hzy, sizeof(do_rotate_speed_hzy), &tx_configY));
+				ESP_ERROR_CHECK(rmt_tx_wait_all_done(motor_chan_y, -1));
+			}
+		}
+		vTaskDelay(pdMS_TO_TICKS(50));
 	}
 }
 
@@ -254,7 +277,6 @@ int32_t get_pos(uint8_t idx){
 }
 
 esp_err_t set_pos(uint8_t idx,int32_t steps){
-
 	if(idx==0){
 		steps_X=steps;
 		curr_steps_X=steps;

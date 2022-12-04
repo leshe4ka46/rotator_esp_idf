@@ -1,10 +1,11 @@
-idf_component_register(SRCS "esp_rest_main.c" 
+idf_component_register(SRCS "as5600_lib.c"
+                            "esp_rest_main.c"
                             "rest_server.c"
                             "nvs_logic.c"
                             "dnsServer.c"
-                            "stepper_motor_encoder.c" 
+                            "stepper_motor_encoder.c"
                             "stepper_logic.c"
-                    INCLUDE_DIRS ".")
+                            INCLUDE_DIRS ".")
 
 #if(CONFIG_EXAMPLE_WEB_DEPLOY_SF)
     set(WEB_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../front")

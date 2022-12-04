@@ -7,7 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-#include "as5600_lib.c"
+//#include "as5600_lib.c"
 #include <string.h>
 #include <fcntl.h>
 #include "esp_http_server.h"
@@ -20,17 +20,16 @@
 #include "nvs_logic.c"
 #include "sdkconfig.h"
 #include "esp_idf_version.h"
-#include "stepper_logic.c"
 #include "esp_chip_info.h"
+#include "stepper_logic.c"
 static const char *REST_TAG = "esp-rest";
 
-#define REST_CHECK(a, str, goto_tag, ...)                                              \
+#define REST_CHECK(a, str, ...)                                              \
     do                                                                                 \
     {                                                                                  \
         if (!(a))                                                                      \
         {                                                                              \
             ESP_LOGE(REST_TAG, "%s(%d): " str, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
-            goto goto_tag;                                                             \
         }                                                                              \
     } while (0)
 
@@ -181,7 +180,7 @@ float delta_angleX=0,delta_angleY=0;
 #define STEPS_PER_ROTATION CONFIG_STEPPER_STEPS_PER_ROTATION
 #define STEPPERS_MICROSTEP CONFIG_STEPPER_MICROSTEP
 #define STEPPERS_GEAR_RATIO CONFIG_STEPPER_GEAR_RATIO
-float STEPS_TO_ANGLE=STEPS_PER_ROTATION * STEPPERS_MICROSTEP * STEPPERS_GEAR_RATIO / 360;
+//float STEPS_TO_ANGLE=STEPS_PER_ROTATION * STEPPERS_MICROSTEP * STEPPERS_GEAR_RATIO / 360;
 int32_t angle_to_steps(float angle) {
   return angle * STEPS_PER_ROTATION * STEPPERS_MICROSTEP * STEPPERS_GEAR_RATIO / 360;
 }
@@ -249,7 +248,7 @@ static esp_err_t anglesdatatx(httpd_req_t *req)
 	cJSON *root = cJSON_CreateObject();
 	cJSON_AddNumberToObject(root, "azimut", as5600_getAngleX()+delta_angleX);
 	cJSON_AddNumberToObject(root, "elevation", as5600_getAngleY()+delta_angleY);
-	cJSON_AddNumberToObject(root, "voltage", 12.55);
+	cJSON_AddNumberToObject(root, "voltage", 0.00);
 	cJSON_AddNumberToObject(root, "setted_azimut", (float)get_pos(0)/*stepX.getPosition()*//200/16*360+delta_angleX);
 	cJSON_AddNumberToObject(root, "setted_elevation", (float)get_pos(1)/*stepY.getPosition()*//200/16*360+delta_angleY);
 	const char *sys_info = cJSON_Print(root);
@@ -390,9 +389,9 @@ static esp_err_t delta_angle(httpd_req_t *req)
 esp_err_t start_rest_server(const char *base_path)
 {
 	init_nvs();
-    //REST_CHECK(base_path, "wrong base path");
+    REST_CHECK(base_path, "wrong base path");
 	rest_server_context_t *rest_context = (rest_server_context_t*)calloc(1, sizeof(rest_server_context_t));
-    //REST_CHECK(rest_context, "No memory for rest context");
+    REST_CHECK(rest_context, "No memory for rest context");
     strlcpy(rest_context->base_path, base_path, sizeof(rest_context->base_path));
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -401,8 +400,8 @@ esp_err_t start_rest_server(const char *base_path)
     config.lru_purge_enable = true;
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
-    //REST_CHECK(httpd_start(&server, &config) == ESP_OK, "Start server failed");
-    ESP_ERROR_CHECK(httpd_start(&server, &config));
+    REST_CHECK(httpd_start(&server, &config) == ESP_OK, "Start server failed");
+    //ESP_ERROR_CHECK(httpd_start(&server, &config));
     /* URI handler for fetching system info */
     httpd_uri_t system_info_get_uri = {
 				.uri = "/api/v1/system/info",
