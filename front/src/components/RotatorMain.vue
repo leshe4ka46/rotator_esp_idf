@@ -32,7 +32,7 @@
 </template>
 
 <script>
-import { bus } from '@/event-bus'
+//import { bus } from '@/event-bus'
 
 export default {
   name: 'RotatorMain',
@@ -80,9 +80,9 @@ export default {
         this.elevation = response.data.elevation.toFixed(2);
         this.setted_azimut = response.data.setted_azimut.toFixed(3);
         this.setted_elevation = response.data.setted_elevation.toFixed(3);
+        this.check_angles();
       });
     }, 1000);
-    setInterval(() => { this.check_angles() }, 1000);
   },
 
   methods: {
@@ -93,7 +93,7 @@ export default {
         })
     },
     check_angles() {
-      bus.$emit('get_data_angles')
+      //bus.$emit('get_data_angles')
       if (Math.abs(this.prev_azimut - this.azimut) < 1) {
         if (Math.abs(this.azimut - this.setted_azimut) > 2) {
           this.alert_x = true;

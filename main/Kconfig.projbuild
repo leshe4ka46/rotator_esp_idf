@@ -12,19 +12,19 @@ menu "Example Configuration"
         default "/www"
         help
             Specify the mount point in VFS.
-            
+
     config ESP_WIFI_AP_SSID
         string "WiFi AP SSID"
         default "SPORADIC_ROTATOR"
         help
             SSID (network name) to start.
-            
+
     config ESP_WIFI_PASSWORD
         string "WiFi Password"
         default "12345678"
         help
             WiFi password (LEAVE EMPTY IF AUTH OPEN).
-    
+
     config ESP_WIFI_CHANNEL
         int "WiFi Channel"
         range 1 13
@@ -39,6 +39,15 @@ menu "Example Configuration"
         help
             Max number of connected devices.
 
+    config EXAMPLE_PROV_MGR_MAX_RETRY_CNT
+        int
+        default 5
+        prompt "Max retries before reseting provisioning state machine"
+        help
+            Set the Maximum retry to avoid reconnecting to an inexistent AP or if credentials
+            are misconfigured. Provisioned credentials are erased and internal state machine
+            is reset after this threshold is reached.
+
     config STEPPER_STEPS_PER_ROTATION
         int "Steps per one rotation with no microstep"
         default 200
@@ -48,5 +57,7 @@ menu "Example Configuration"
     config STEPPER_GEAR_RATIO
         int "Gear ratio"
         default 1
-        
+
+
+
 endmenu

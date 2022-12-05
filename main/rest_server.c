@@ -17,14 +17,14 @@
 #include "cJSON.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "nvs_logic.c"
 #include "sdkconfig.h"
 #include "esp_idf_version.h"
 #include "esp_chip_info.h"
 #include "stepper_logic.c"
-static const char *REST_TAG = "esp-rest";
 
-#define REST_CHECK(a, str, ...)                                              \
+
+static const char *REST_TAG = "esp-rest";
+#define REST_CHECK(a, str, ...)                                                        \
     do                                                                                 \
     {                                                                                  \
         if (!(a))                                                                      \
@@ -386,6 +386,46 @@ static esp_err_t delta_angle(httpd_req_t *req)
     cJSON_Delete(root);
     return ESP_OK;
 }
+static esp_err_t wifi_mode_set(httpd_req_t *req)
+{
+
+    char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+    ESP_ERROR_CHECK(get_buf_from_request(req,buf));
+    cJSON *root = cJSON_Parse(buf);
+    const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
+	int8_t mode = cJSON_GetObjectItem(root, "mode")->valueint;
+
+
+    if(is_admin(key)==77){
+        set_wifi(mode);
+    	httpd_resp_sendstr(req, "OK");
+    }
+    else{
+    	httpd_resp_sendstr(req, "No");
+    }
+
+    cJSON_Delete(root);
+    return ESP_OK;
+}
+
+static esp_err_t restert_esp(httpd_req_t *req)
+{
+
+    char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+    ESP_ERROR_CHECK(get_buf_from_request(req,buf));
+    cJSON *root = cJSON_Parse(buf);
+    const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
+    if(is_admin(key)==77){
+        esp_restart();
+    	httpd_resp_sendstr(req, "OK");
+    }
+    else{
+    	httpd_resp_sendstr(req, "No");
+    }
+
+    cJSON_Delete(root);
+    return ESP_OK;
+}
 esp_err_t start_rest_server(const char *base_path)
 {
 	init_nvs();
@@ -396,7 +436,7 @@ esp_err_t start_rest_server(const char *base_path)
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
-    config.max_uri_handlers = 12;
+    config.max_uri_handlers = 13;
     config.lru_purge_enable = true;
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
@@ -488,6 +528,23 @@ esp_err_t start_rest_server(const char *base_path)
 				.user_ctx = rest_context
 			};
 	httpd_register_uri_handler(server, &data_set_nullY_uri);
+
+    httpd_uri_t data_set_wifi_mode_uri = {
+				.uri = "/api/v1/data/set/wifi_mode",
+				.method = HTTP_POST,
+				.handler = wifi_mode_set,
+				.user_ctx = rest_context
+			};
+	httpd_register_uri_handler(server, &data_set_wifi_mode_uri);
+
+
+    httpd_uri_t data_set_system_restart_uri = {
+				.uri = "/api/v1/system/restart",
+				.method = HTTP_POST,
+				.handler = restert_esp,
+				.user_ctx = rest_context
+			};
+	httpd_register_uri_handler(server, &data_set_system_restart_uri);
 
     httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
 

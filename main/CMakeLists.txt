@@ -1,10 +1,11 @@
-idf_component_register(SRCS "as5600_lib.c"
+idf_component_register(SRCS "prov.c" "as5600_lib.c"
                             "esp_rest_main.c"
-                            "rest_server.c"
+                            #"rest_server.c"
                             "nvs_logic.c"
                             "dnsServer.c"
                             "stepper_motor_encoder.c"
                             "stepper_logic.c"
+                            "prov.c"
                             INCLUDE_DIRS ".")
 
 #if(CONFIG_EXAMPLE_WEB_DEPLOY_SF)

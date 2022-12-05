@@ -51,10 +51,7 @@
       </v-toolbar>
 
       <v-dialog v-model="settings_dialog" max-width="85%">
-        <v-card>
-          <v-card-title style="font-size: 1.2em;">
-            Настройки
-          </v-card-title>
+        <v-card >
 
           <RotatorSettings style="font-size: 1.2em;"></RotatorSettings>
 
@@ -93,11 +90,9 @@ export default {
       mdiHome,
       mdiChartBoxOutline,
       mdiLampsOutline,
-      dialog: false,
       login_dialog: false,
       drawer: false,
-      settings_dialog: false,
-      mode: true,
+      settings_dialog: true,
       isLoading: true,
       is_admin: false,
       setted_azimut: 0,
@@ -128,13 +123,13 @@ export default {
       }
     }
 
-    bus.$on('save_data_angles', (data) => {
+    /*bus.$on('save_data_angles', (data) => {
       this.setted_azimut = data.azimut
       this.setted_elevation = data.elevation
     })
     bus.$on('get_data_angles', () => {
       bus.$emit('return_data_angles', { azimut: Number(this.setted_azimut), elevation: Number(this.setted_elevation) })
-    })
+    })*/
     bus.$on('is_admin', (val) => {
       this.is_admin = val
     })
@@ -149,7 +144,7 @@ export default {
     }, 100)
   },
   components: {
-    RotatorAuth, RotatorSettings/* RotatorSettings, RotatorMain */
+    RotatorAuth, RotatorSettings
   },
   methods: {
     open_drawer() {

@@ -4,11 +4,13 @@
     "private": true,
     "scripts": {
         "serve": "vue-cli-service serve",
-        "build": "vue-cli-service build & npm run gzip",
+        "build": "vue-cli-service build && npm run gzip",
+        "buildwin": "vue-cli-service build & npm run gzip",
         "lint": "vue-cli-service lint",
         "fix": "eslint ./src/* --fix  && npm run fix2",
         "fix2": "eslint ./src/components/* --fix",
-        "gzip": "cd dist/js && \"C:/Program Files/7-Zip/7z.exe\" a -tgzip app.js.gz app.js"
+        "gzipwin": "cd dist/js && \"C:/Program Files/7-Zip/7z.exe\" a -tgzip app.js.gz app.js",
+        "gzip": "cd dist/js && sudo 7z a -tgzip app.js.gz app.js"
     },
     "dependencies": {
         "@material-design-icons/svg": "^0.13.0",
@@ -22,6 +24,8 @@
         "vuex": "^3.0.1"
     },
     "devDependencies": {
+        "@mdi/font": "^7.0.96",
+        "@svgv/webpack": "^0.1.0",
         "@vue/cli-plugin-babel": "~5.0.0",
         "@vue/cli-plugin-eslint": "~5.0.0",
         "@vue/cli-service": "~5.0.0",

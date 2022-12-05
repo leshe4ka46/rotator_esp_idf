@@ -6,14 +6,18 @@
 
           <v-card-title primary-title>
             <div class="ma-auto">
-              <span class="grey--text">Версия IDF: {{version}}</span>
+              <span class="grey--text">Версия IDF: {{ version }}</span>
               <br>
-              <span class="grey--text">Ядер ESP32: {{cores}}</span>
+              <span class="grey--text">Ядер ESP32: {{ cores }}</span>
               <br>
-              <span class="grey--text">Версия ESP32: {{revision}}</span>
+              <span class="grey--text">Версия ESP32: {{ revision }}</span>
               <br>
               <span class="grey--text">Версия: 1.0.1</span>
+              <br>
+              <v-btn tile color="warning" @click="restart_esp">Перезагрузить esp
+              </v-btn>
             </div>
+
           </v-card-title>
         </v-card>
       </v-flex>
@@ -23,25 +27,35 @@
 
 <script>
 export default {
-  data () {
+  data() {
     return {
       version: null,
       cores: null,
-      revision:null
+      revision: null
     }
   },
-  mounted () {
+  mounted() {
     this.$ajax
       .get('/api/v1/system/info')
       .then(data => {
         this.version = data.data.version
         this.cores = data.data.cores
-        this.revision=data.data.revision
+        this.revision = data.data.revision
       })
       .catch(error => {
-        // eslint-disable-next-line
         console.log(error);
       })
+  },
+  methods: {
+    restart_esp() {
+      this.$ajax
+        .post('/api/v1/system/restart', {
+          key: localStorage.getItem('rotator_client_id')
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    }
   }
 }
 </script>

@@ -20,6 +20,13 @@
 #include "protocol_examples_common.h"
 #include "esp_wifi.h"
 
+#ifndef __nvs_logic_inc_
+#include "nvs_logic.c"
+#endif
+
+#include "prov.c"
+#include "rest_server.c"
+
 #include "dnsServer.c"
 #define MDNS_INSTANCE "esp home web server"
 
@@ -137,7 +144,19 @@ void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
     esp_wifi_set_ps(WIFI_PS_NONE);
-    wifi_init_softap();
+
+    if(get_wifi()==0){
+        wifi_init_softap();
+    }
+    else if(get_wifi()==1){
+        if(start_provisioning()==ESP_FAIL){
+            set_wifi(0);
+            esp_restart();
+        };
+    }
+
+
+
     /*ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());*/
     /*initialise_mdns();
