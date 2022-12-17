@@ -170,7 +170,7 @@ export default {
 </script>
 
 <style>
-body::-webkit-scrollbar {
+/*body::-webkit-scrollbar {
   width: 0px;
-}
+}*/
 </style>

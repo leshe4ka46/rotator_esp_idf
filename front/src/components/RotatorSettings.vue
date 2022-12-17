@@ -22,7 +22,7 @@
     <v-container>
       <v-tabs-items v-model="tab">
         <v-tab-item tab="0">
-          <v-card flat>
+          <v-card flat >
             <RotatorTools></RotatorTools>
           </v-card>
         </v-tab-item>

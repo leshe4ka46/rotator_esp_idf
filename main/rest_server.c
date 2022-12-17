@@ -84,7 +84,7 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
     	 printf(" -- yandex fix\r\n");
     	 return ESP_FAIL;
     }
-    //printf(filepath);
+    ESP_LOGI(REST_TAG, "path : %s", filepath);
     /*if (CHECK_FILE_EXTENSION(filepath,".gz") == 0) {
     	  httpd_resp_set_hdr(req,"Content-Encoding", "gzip");
     }*/
@@ -398,6 +398,7 @@ static esp_err_t wifi_mode_set(httpd_req_t *req)
 
     if(is_admin(key)==77){
         set_wifi(mode);
+        set_pr_state(0);
     	httpd_resp_sendstr(req, "OK");
     }
     else{
@@ -408,7 +409,7 @@ static esp_err_t wifi_mode_set(httpd_req_t *req)
     return ESP_OK;
 }
 
-static esp_err_t restert_esp(httpd_req_t *req)
+static esp_err_t restart_esp(httpd_req_t *req)
 {
 
     char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
@@ -541,7 +542,7 @@ esp_err_t start_rest_server(const char *base_path)
     httpd_uri_t data_set_system_restart_uri = {
 				.uri = "/api/v1/system/restart",
 				.method = HTTP_POST,
-				.handler = restert_esp,
+				.handler = restart_esp,
 				.user_ctx = rest_context
 			};
 	httpd_register_uri_handler(server, &data_set_system_restart_uri);

@@ -1,12 +1,12 @@
 <template>
-  <v-container>
+  <v-container style="overflow: scroll;">
 
-    <v-btn depressed color="primary" @click="zeroaxesX">
+    <!--<v-btn depressed color="primary" @click="zeroaxesX">
       Сбросить значение граусов Х
     </v-btn>
     <v-btn depressed color="primary" @click="zeroaxesY">
       Сбросить значение граусов Y
-    </v-btn>
+    </v-btn>-->
     <v-sheet color="white">
       <v-text-field label="Азимут" v-model="azimut" type="number" @keyup.enter.exact="sendangles" />
       <v-text-field label="Элевация" v-model="elevation" type="number" @keyup.enter.exact="sendangles" />
@@ -14,8 +14,6 @@
         Отправить
       </v-btn>
     </v-sheet>
-
-
     <br><br>
     <p>Подключение</p>
     <v-radio-group v-model="val" mandatory>
@@ -23,17 +21,23 @@
         <input type="radio" :value="n.value" v-model="val">
         {{n.name}}
       </label>
-
-
     </v-radio-group>
-
-    <div v-if="val=='1'">Для подключения надо установить приложение ESP SoftAP Provisioning. В uart0 будет qr код для подключения.
+    <div v-if="val=='1'">Для подключения надо установить приложение ESP SoftAP Provisioning. В uart0 будет qr код для подключения. Необходим терминал с поддержкой unicode символов. Есть возможность ручного подключения в том же приложении
       <br>
       <p class="text-wrap">
-        <a class="overflow-auto" href="https://play.google.com/store/apps/details?id=com.espressif.provsoftap">https://play.google.com/store/apps/details?id=com.espressif.provsoftap</a>
+        <a class="overflow-auto" href="https://files.sporadic.ru/f/bba1f4984c084bb8a61a/?dl=1">Скачать</a>
+        <br>
+        <a class="overflow-auto" href="ESP_SoftAP_Prov_2_1_0.apk">Скачать локально</a>
+
+        <a class="overflow-auto" href="34567">Скачать локально</a>
       </p>
     </div>
     <v-btn tile color="success" @click="save_wireless_mode">Сохранить</v-btn>
+    <v-snackbar
+      v-model="snackbar"
+      :timeout="2000">
+      Сохранено
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -42,6 +46,7 @@ export default {
   name: 'RotatorTools',
   data() {
     return {
+      snackbar:false,
       azimut:0,
       elevation:0,
       data:[{name:"AP",value:0},{name:"STA",value:1}],
@@ -68,7 +73,7 @@ export default {
           key: localStorage.getItem('rotator_client_id'),
           azimut: Number(this.azimut)*100,
           elevation: Number(this.elevation)*100
-        })
+        }).then(() => {this.snackbar=true;})
     },
     save_wireless_mode(){
       this.$ajax
@@ -76,6 +81,7 @@ export default {
           key: localStorage.getItem('rotator_client_id'),
           mode: this.val
         })
+        .then(() => {this.snackbar=true;})
         .catch(error => {
           console.log(error)
         })

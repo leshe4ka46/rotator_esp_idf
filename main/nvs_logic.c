@@ -149,3 +149,46 @@ int8_t get_wifi()
     nvs_close(ws);
     return value;
 }
+
+
+esp_err_t set_pr_state(int8_t value)
+{
+    nvs_handle_t ws;
+    user_nfs_err = nvs_open("wifi_settings", NVS_READWRITE, &ws);
+    if (user_nfs_err != ESP_OK)
+    {
+        printf("Error (%s) opening NVS!\n", esp_err_to_name(user_nfs_err));
+        return ESP_FAIL;
+    }
+    user_nfs_err = nvs_set_i8(ws, "prstate", value);
+    nvs_commit(ws);
+    nvs_close(ws);
+    return ESP_OK;
+}
+
+int8_t get_pr_state()
+{
+    int8_t value;
+    nvs_handle_t ws;
+    user_nfs_err = nvs_open("wifi_settings", NVS_READWRITE, &ws);
+    if (user_nfs_err != ESP_OK)
+    {
+        printf("Error (%s) opening NVS!\n", esp_err_to_name(user_nfs_err));
+        return ESP_FAIL;
+    }
+    user_nfs_err = nvs_get_i8(ws, "prstate", &value);
+    switch (user_nfs_err)
+    {
+    case ESP_OK:
+        break;
+    case ESP_ERR_NVS_NOT_FOUND:
+        printf("The value is not initialized yet!\n");
+        set_pr_state(0);
+        return 0;
+        break;
+    default:
+        printf("Error (%s) reading!\n", esp_err_to_name(user_nfs_err));
+    }
+    nvs_close(ws);
+    return value;
+}

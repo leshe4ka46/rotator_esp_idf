@@ -157,6 +157,7 @@ void set_zero_Y(){
 		count_zerosY=0;
 	}
 }
+
 float as5600_getAngleX(){
 		ESP_LOGI(AS_TAGX,"%f  temp:%f  delta:%f",as5600_angleX,as5600_temp_angleX,as5600_delta_angleX);
 		return as5600_angleX;

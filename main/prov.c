@@ -239,6 +239,10 @@ esp_err_t start_provisioning(){
 
     /* If device is not yet provisioned start provisioning service */
     if (!provisioned) {
+        if(get_pr_state()==1){
+            return ESP_FAIL;
+        }
+        set_pr_state(1);
         ESP_LOGI(TAG_PROV, "Starting provisioning");
 
         /* What is the Device Service Name that we want
@@ -320,6 +324,6 @@ esp_err_t start_provisioning(){
     wifi_event_group = xEventGroupCreate();
 
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
-
+    set_pr_state(0);
     return retval;
 }
