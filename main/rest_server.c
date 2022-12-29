@@ -13,7 +13,6 @@
 #include "esp_http_server.h"
 #include "esp_system.h"
 #include "esp_log.h"
-#include "esp_vfs.h"
 #include "cJSON.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -100,7 +99,7 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
 		ESP_LOGI(REST_TAG, "Redirecting to root");
         /* Respond with 500 Internal Server Error */
         //httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr><center>rotator/1.0.1</center></body></html>");
-        return ESP_FAIL;
+        return ESP_OK;
     }
 
     set_content_type_from_file(req, filepath);
@@ -561,7 +560,8 @@ esp_err_t start_rest_server(const char *base_path)
 
 
     init_steppers();
-    init_i2c(7,6,19,8);
+    init_i2c(21,45,48,47);
+    //init_i2c(7,6,19,8);
     start_monitoring_AS5600();
     return ESP_OK;
 

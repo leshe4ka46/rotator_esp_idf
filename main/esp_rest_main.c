@@ -150,7 +150,10 @@ void app_main(void)
         if(start_provisioning()==ESP_FAIL){
             set_wifi(0);
             esp_restart();
-        };
+        }
+        else{
+            esp_restart();
+        }
     }
 
 

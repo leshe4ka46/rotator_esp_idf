@@ -20,7 +20,7 @@ static EventGroupHandle_t wifi_event_group;
 #define EXAMPLE_PROV_SEC2_PWD               "abcd1234"
 
 esp_err_t retval=ESP_OK;
-
+esp_err_t connected=ESP_FAIL;
 static const char sec2_salt[] = {
     0x03, 0x6e, 0xe0, 0xc7, 0xbc, 0xb9, 0xed, 0xa8, 0x4c, 0x9e, 0xac, 0x97, 0xd9, 0x3d, 0xec, 0xf4
 };
@@ -134,6 +134,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG_PROV, "Connected with IP Address:" IPSTR, IP2STR(&event->ip_info.ip));
         /* Signal main application to continue execution */
+        connected=ESP_OK;
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_EVENT);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         ESP_LOGI(TAG_PROV, "Disconnected. Connecting to the AP again...");
@@ -323,7 +324,13 @@ esp_err_t start_provisioning(){
     }
     wifi_event_group = xEventGroupCreate();
 
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
-    set_pr_state(0);
-    return retval;
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, pdMS_TO_TICKS(60*1000));
+    if(connected==ESP_OK){
+        set_pr_state(0);
+        return retval;
+    }
+    else{
+        return ESP_FAIL;
+    }
+
 }

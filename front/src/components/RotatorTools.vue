@@ -25,11 +25,15 @@
     <div v-if="val=='1'">Для подключения надо установить приложение ESP SoftAP Provisioning. В uart0 будет qr код для подключения. Необходим терминал с поддержкой unicode символов. Есть возможность ручного подключения в том же приложении
       <br>
       <p class="text-wrap">
-        <a class="overflow-auto" href="https://files.sporadic.ru/f/bba1f4984c084bb8a61a/?dl=1">Скачать</a>
+        <!--<a class="overflow-auto" href="https://play.google.com/store/apps/details?id=com.espressif.provsoftap">Скачать (Android/GP)</a>
+        <br>-->
+        <a class="overflow-auto" href="market://details?id=com.espressif.provsoftap">Скачать (Android/GP)</a>
+        <br>
+        <a class="overflow-auto" href="https://apps.apple.com/us/app/esp-softap-provisioning/id1474040630">Скачать (iOS)</a>
+        <br>
+        <a class="overflow-auto" href="https://files.sporadic.ru/f/bba1f4984c084bb8a61a/?dl=1">Скачать (Android/files.sporadic)</a>
         <br>
         <a class="overflow-auto" href="ESP_SoftAP_Prov_2_1_0.apk">Скачать локально</a>
-
-        <a class="overflow-auto" href="34567">Скачать локально</a>
       </p>
     </div>
     <v-btn tile color="success" @click="save_wireless_mode">Сохранить</v-btn>

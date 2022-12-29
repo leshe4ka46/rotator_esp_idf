@@ -52,6 +52,11 @@
         </v-card>
       </v-layout>
     </div>
+    <v-snackbar
+      v-model="snackbar"
+      :timeout="2000">
+      Сохранено
+    </v-snackbar>
   </div>
 </template>
 
@@ -74,6 +79,7 @@ export default {
       sat_lat: 0,
       sat_long: 0,
       sat_height: 0,
+      snackbar:false,
       /*list: ['GPS_CALC', 'UART', 'GPS+UART'],
       data: [{ id: 0, name: 'GPS_CALC' }, { id: 1, name: 'UART' }, { id: 2, name: 'GPS+UART' }],
       selectedOption: 1*/
@@ -97,6 +103,7 @@ export default {
           azimut: Number(this.azimut) * 100,
           elevation: Number(this.elevation) * 100
         })
+        .then(() => {this.snackbar=true;})
         .catch(error => {
           console.log(error)
         })
@@ -109,11 +116,12 @@ export default {
           sat_long: Number(this.sat_long) * 100,
           sat_height: Number(this.sat_height) * 100
         })
+        .then(() => {this.snackbar=true;})
         .catch(error => {
           console.log(error)
         })
     },
-    send_hoome_coords: function () {
+    send_home_coords: function () {
       this.$ajax
         .post('/api/v1/data/set/home_coords', {
           key: localStorage.getItem('rotator_client_id'),
@@ -121,6 +129,7 @@ export default {
           home_long: Number(this.home_long) * 100,
           home_height: Number(this.home_height) * 100
         })
+        .then(() => {this.snackbar=true;})
         .catch(error => {
           console.log(error)
         })
