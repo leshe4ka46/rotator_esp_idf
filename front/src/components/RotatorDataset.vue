@@ -29,7 +29,7 @@
           </v-container>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn tile color="success" @click="send_coords">Отправить &nbsp;<MdiSvg>{{ mdiSend }}</MdiSvg>
+            <v-btn tile color="success" @click="send_sat_coords">Отправить &nbsp;<MdiSvg>{{ mdiSend }}</MdiSvg>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -73,12 +73,12 @@ export default {
       is_admin: 0,
       azimut: 0,
       elevation: 0,
-      home_lat: 0,
-      home_long: 0,
-      home_height: 0,
-      sat_lat: 0,
-      sat_long: 0,
-      sat_height: 0,
+      home_lat: 51.738396,
+      home_long: 36.148329,
+      home_height: 161,
+      sat_lat: 51.750014,
+      sat_long: 36.168436,
+      sat_height: 2000,
       snackbar:false,
       /*list: ['GPS_CALC', 'UART', 'GPS+UART'],
       data: [{ id: 0, name: 'GPS_CALC' }, { id: 1, name: 'UART' }, { id: 2, name: 'GPS+UART' }],
@@ -108,13 +108,13 @@ export default {
           console.log(error)
         })
     },
-    send_coords: function () {
+    send_sat_coords: function () {
       this.$ajax
-        .post('/api/v1/data/set/coords', {
+        .post('/api/v1/data/set/satgps', {
           key: localStorage.getItem('rotator_client_id'),
-          sat_lat: Number(this.sat_lat) * 100,
-          sat_long: Number(this.sat_long) * 100,
-          sat_height: Number(this.sat_height) * 100
+          lat: Number(this.sat_lat) * 100,
+          long: Number(this.sat_long) * 100,
+          height: Number(this.sat_height) * 100
         })
         .then(() => {this.snackbar=true;})
         .catch(error => {
@@ -123,11 +123,11 @@ export default {
     },
     send_home_coords: function () {
       this.$ajax
-        .post('/api/v1/data/set/home_coords', {
+        .post('/api/v1/data/set/homegps', {
           key: localStorage.getItem('rotator_client_id'),
-          home_lat: Number(this.home_lat) * 100,
-          home_long: Number(this.home_long) * 100,
-          home_height: Number(this.home_height) * 100
+          lat: Number(this.home_lat) * 100,
+          long: Number(this.home_long) * 100,
+          height: Number(this.home_height) * 100
         })
         .then(() => {this.snackbar=true;})
         .catch(error => {

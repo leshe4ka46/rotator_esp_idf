@@ -92,7 +92,7 @@ export default {
       mdiLampsOutline,
       login_dialog: false,
       drawer: false,
-      settings_dialog: true,
+      settings_dialog: false,
       isLoading: true,
       is_admin: false,
       setted_azimut: 0,

@@ -21,6 +21,7 @@
 #include "esp_chip_info.h"
 #include "stepper_logic.c"
 
+#include "math.h"
 
 static const char *REST_TAG = "esp-rest";
 #define REST_CHECK(a, str, ...)                                                        \
@@ -174,36 +175,13 @@ static esp_err_t system_info_get_handler(httpd_req_t *req)
 //------------------------------STEPPER----------
 
 
-//int32_t angleX=0,angleY=0,newangleX=0,newangleY=0;
 float delta_angleX=0,delta_angleY=0;
 #define STEPS_PER_ROTATION CONFIG_STEPPER_STEPS_PER_ROTATION
 #define STEPPERS_MICROSTEP CONFIG_STEPPER_MICROSTEP
 #define STEPPERS_GEAR_RATIO CONFIG_STEPPER_GEAR_RATIO
-//float STEPS_TO_ANGLE=STEPS_PER_ROTATION * STEPPERS_MICROSTEP * STEPPERS_GEAR_RATIO / 360;
 int32_t angle_to_steps(float angle) {
   return angle * STEPS_PER_ROTATION * STEPPERS_MICROSTEP * STEPPERS_GEAR_RATIO / 360;
 }
-
-/*int32_t delta;//,local_angle;
-int32_t getpos(int32_t local_angle, uint8_t motor){  //motor: x--0 y--1
-	//local_angle=angle_to_steps(angle);
-	if (motor==0){
-		delta=local_angle-angleX;
-		angleX=local_angle;
-		printf("motor:%d oldpos:%ld  pos:%ld \r\n",motor,angleX,newangleX);
-
-
-	}
-	if (motor==1){
-		delta=local_angle-angleY;
-		angleY=local_angle;
-		printf("motor:%d oldpos:%ld  pos:%ld \r\n",motor,angleY,newangleY);
-	}
-	printf("delta:%ld\r\n",delta);
-	return delta;
-}
-*/
-
 static esp_err_t rotate_angle(httpd_req_t *req)
 {
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
@@ -224,7 +202,85 @@ static esp_err_t rotate_angle(httpd_req_t *req)
     return ESP_OK;
 }
 
-/* Simple handler for getting temperature data */
+double receiver[3];
+double sputnic[3];
+double angle[2];
+
+#define latb 1.57079633
+#define longb 0
+double absf(double x) { return (x>0)?x:(double)x*-1;}
+void aiming(double lata, double longa, double altita, double latc, double longc, double altitc, double *azimut, double *elev) {
+    ESP_LOGI("CALC GPS", "%f %f %f %f %f %f", lata,longa,altita,latc,longc,altitc);
+    double rp = atan2(sqrt(pow(cos(latb) * sin(longb - longa), 2) + pow(cos(lata) * sin(latb) - sin(lata) * cos(latb) * cos(absf(longb - longa)), 2)), sin(lata) * sin(latb) + cos(lata) * cos(latb) * cos(absf(longb - longa)));
+    double rs = atan2(sqrt(pow(cos(latc) * sin(longc - longa), 2) + pow(cos(lata) * sin(latc) - sin(lata) * cos(latc) * cos(absf(longc - longa)), 2)), sin(lata) * sin(latc) + cos(lata) * cos(latc) * cos(absf(longc - longa)));
+    double ps = atan2(sqrt(pow(cos(latc) * sin(longc - longb), 2) + pow(cos(latb) * sin(latc) - sin(latb) * cos(latc) * cos(absf(longc - longb)), 2)), sin(latb) * sin(latc) + cos(latb) * cos(latc) * cos(absf(longc - longb)));
+    ESP_LOGI("CALC GPS", "%f %f %f", rp, rs, ps);
+    *azimut = (acos((cos(ps) - cos(rs) * cos(rp)) / (sin(rs) * sin(rp)))) * 180 / 3.141592;
+    ESP_LOGI("CALC GPS", "%f", *azimut);
+    if (longc < longa) *azimut *= -1;
+
+    if (rs > 0.002 && altitc > 2000)
+    {
+        double s = sqrt(pow(altita / 1000.0 + 6371.0, 2) + pow(altitc / 1000.0 + 6371.0, 2) - 2.0 * (altita / 1000.0 + 6371.0) * (altitc / 1000.0 + 6371.0) * cos(rs));
+        *elev = 90 - (asin(sin(rs) * (altita / 1000.0 + 6371.0) / s) + rs) * 180.0 / 3.141592;
+    } else {
+        double s = rs * 6371;
+        *elev = atan((altitc - altita) / 1000 / s) * 180 / 3.141592;
+    }
+}
+static esp_err_t home_set_gps(httpd_req_t *req)
+{
+	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
+	cJSON *root = cJSON_Parse(buf);
+	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
+	int lat = cJSON_GetObjectItem(root, "lat")->valueint;
+	int lon = cJSON_GetObjectItem(root, "long")->valueint;
+    int height = cJSON_GetObjectItem(root, "height")->valueint;
+
+	if(is_admin(key)==77){
+		receiver[0]=(double)lat/100;
+        receiver[1]=(double)lon/100;
+        receiver[2]=(double)height/100;
+		ESP_LOGI("Home coords","receiver: %f %f %f\r\n",(float)lat/100,(float)lon/100,(float)height/100);
+	}
+
+	cJSON_Delete(root);
+    httpd_resp_sendstr(req, "OK");
+    return ESP_OK;
+}
+#define PI 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196442881097566593344612847564823378678316527120190914564856692346034861045432664821339360726024914127372458700660631558817488152092096282925409171536436789259036001133053054882046652138414695194151160943305727036575959195309218611738193261179310511854807446237996274956735188575272489122793818301194912983367336244065664308602139494639522473719070217986094370277053921717629317675238467481846766940513200056812714526356082778577134275778960917363717872146844090122495343014654958537105079227968925892354201995611212902196086403441815981362977477130996051870721134999999
+#define radians(x)  ( x*PI/180 )
+
+static esp_err_t sat_set_gps(httpd_req_t *req)
+{
+	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
+	cJSON *root = cJSON_Parse(buf);
+	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
+	int lat = cJSON_GetObjectItem(root, "lat")->valueint;
+	int lon = cJSON_GetObjectItem(root, "long")->valueint;
+    int height = cJSON_GetObjectItem(root, "height")->valueint;
+
+	if(is_admin(key)==77){
+		sputnic[0]=(double)lat/100;
+        sputnic[1]=(double)lon/100;
+        sputnic[2]=(double)height/100;
+		ESP_LOGI("SAT coords","sputnic: %f %f %f\r\n",(float)lat/100,(float)lon/100,(float)height/100);
+        if(receiver[0]!=0){
+
+            aiming(radians(receiver[0]), radians(receiver[1]), receiver[2], radians(sputnic[0]), radians(sputnic[1]), sputnic[2], &angle[0], &angle[1]);
+            ESP_LOGI("CALC GPS","%f %f",angle[0], angle[1]);
+            absolute_stepper(0,angle_to_steps(angle[0]-delta_angleX));
+            absolute_stepper(1,angle_to_steps(angle[1]-delta_angleY));
+        }
+	}
+
+	cJSON_Delete(root);
+    httpd_resp_sendstr(req, "OK");
+    return ESP_OK;
+}
+
 
 
 static esp_err_t adduser(httpd_req_t *req)
@@ -248,8 +304,8 @@ static esp_err_t anglesdatatx(httpd_req_t *req)
 	cJSON_AddNumberToObject(root, "azimut", as5600_getAngleX()+delta_angleX);
 	cJSON_AddNumberToObject(root, "elevation", as5600_getAngleY()+delta_angleY);
 	cJSON_AddNumberToObject(root, "voltage", 0.00);
-	cJSON_AddNumberToObject(root, "setted_azimut", (float)get_pos(0)/*stepX.getPosition()*//200/16*360+delta_angleX);
-	cJSON_AddNumberToObject(root, "setted_elevation", (float)get_pos(1)/*stepY.getPosition()*//200/16*360+delta_angleY);
+	cJSON_AddNumberToObject(root, "setted_azimut", (float)get_pos(0)/STEPS_PER_ROTATION/STEPPERS_MICROSTEP/STEPPERS_GEAR_RATIO*360+delta_angleX);
+	cJSON_AddNumberToObject(root, "setted_elevation", (float)get_pos(1)/STEPS_PER_ROTATION/STEPPERS_MICROSTEP/STEPPERS_GEAR_RATIO*360+delta_angleY);
 	const char *sys_info = cJSON_Print(root);
 	httpd_resp_sendstr(req, sys_info);
 	free((void *)sys_info);
@@ -436,7 +492,7 @@ esp_err_t start_rest_server(const char *base_path)
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
-    config.max_uri_handlers = 13;
+    config.max_uri_handlers = 15;
     config.lru_purge_enable = true;
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
@@ -495,7 +551,21 @@ esp_err_t start_rest_server(const char *base_path)
 
 
 
+    httpd_uri_t data_set_homegps_uri = {
+				.uri = "/api/v1/data/set/homegps",
+				.method = HTTP_POST,
+				.handler = home_set_gps,
+				.user_ctx = rest_context
+			};
+    httpd_register_uri_handler(server, &data_set_homegps_uri);
 
+    httpd_uri_t data_set_satgps_uri = {
+				.uri = "/api/v1/data/set/satgps",
+				.method = HTTP_POST,
+				.handler = sat_set_gps,
+				.user_ctx = rest_context
+			};
+    httpd_register_uri_handler(server, &data_set_satgps_uri);
 
     httpd_uri_t data_set_angles_uri = {
 				.uri = "/api/v1/data/set/angles",
@@ -546,7 +616,7 @@ esp_err_t start_rest_server(const char *base_path)
 			};
 	httpd_register_uri_handler(server, &data_set_system_restart_uri);
 
-    httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
+    //httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
 
 
     /* URI handler for getting web server files */
@@ -563,6 +633,7 @@ esp_err_t start_rest_server(const char *base_path)
     init_i2c(21,45,48,47);
     //init_i2c(7,6,19,8);
     start_monitoring_AS5600();
+    ESP_LOGI("RAD","%.51f",radians(180));
     return ESP_OK;
 
 }
