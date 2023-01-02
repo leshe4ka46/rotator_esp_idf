@@ -52,13 +52,13 @@ export default {
   },
 
   methods: {
-    
+
     sendangles() {
       this.$ajax
         .post('/api/v1/data/set/currentangles', {
           key: localStorage.getItem('rotator_client_id'),
-          azimut: Number(this.azimut)*100,
-          elevation: Number(this.elevation)*100
+          azimut: Number(this.azimut),
+          elevation: Number(this.elevation)
         }).then(() => {this.snackbar=true;})
     },
     save_wireless_mode(){

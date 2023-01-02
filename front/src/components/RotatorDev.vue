@@ -60,7 +60,7 @@ export default {
       this.$ajax
         .post('/api/v1/data/set/diffgps', {
           key: localStorage.getItem('rotator_client_id'),
-          diff: this.diffgps*100
+          diff: this.diffgps
         })
     },
   }

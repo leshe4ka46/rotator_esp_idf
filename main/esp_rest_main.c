@@ -165,7 +165,7 @@ void app_main(void)
     netbiosns_set_name(CONFIG_EXAMPLE_MDNS_HOST_NAME);*/
 
 
-    start_dns_server();
+    //start_dns_server();
 
     //ESP_ERROR_CHECK(example_connect());
     ESP_ERROR_CHECK(init_fs());

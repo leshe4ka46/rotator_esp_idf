@@ -100,8 +100,8 @@ export default {
       this.$ajax
         .post('/api/v1/data/set/angles', {
           key: localStorage.getItem('rotator_client_id'),
-          azimut: Number(this.azimut) * 100,
-          elevation: Number(this.elevation) * 100
+          azimut: Number(this.azimut),
+          elevation: Number(this.elevation)
         })
         .then(() => {this.snackbar=true;})
         .catch(error => {
@@ -112,9 +112,9 @@ export default {
       this.$ajax
         .post('/api/v1/data/set/satgps', {
           key: localStorage.getItem('rotator_client_id'),
-          lat: Number(this.sat_lat) * 100,
-          long: Number(this.sat_long) * 100,
-          height: Number(this.sat_height) * 100
+          lat: Number(this.sat_lat),
+          lon: Number(this.sat_long),
+          height: Number(this.sat_height)
         })
         .then(() => {this.snackbar=true;})
         .catch(error => {
@@ -125,9 +125,9 @@ export default {
       this.$ajax
         .post('/api/v1/data/set/homegps', {
           key: localStorage.getItem('rotator_client_id'),
-          lat: Number(this.home_lat) * 100,
-          long: Number(this.home_long) * 100,
-          height: Number(this.home_height) * 100
+          lat: Number(this.home_lat),
+          lon: Number(this.home_long),
+          height: Number(this.home_height)
         })
         .then(() => {this.snackbar=true;})
         .catch(error => {

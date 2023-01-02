@@ -188,13 +188,13 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
-	int azimut = cJSON_GetObjectItem(root, "azimut")->valueint;
-	int elevation = cJSON_GetObjectItem(root, "elevation")->valueint;
+	double azimut = cJSON_GetObjectItem(root, "azimut")->valuedouble;
+	double elevation = cJSON_GetObjectItem(root, "elevation")->valuedouble;
 
 	if(is_admin(key)==77){
-		absolute_stepper(0,angle_to_steps((float)azimut/100-delta_angleX));
-		absolute_stepper(1,angle_to_steps((float)elevation/100-delta_angleY));
-		printf("angles: %f %f \r\n",(float)azimut/100,(float)elevation/100);
+		absolute_stepper(0,angle_to_steps(azimut-delta_angleX));
+		absolute_stepper(1,angle_to_steps(elevation-delta_angleY));
+		printf("angles: %f %f \r\n",azimut,elevation);
 	}
 
 	cJSON_Delete(root);
@@ -220,10 +220,10 @@ static esp_err_t set_gps_diff(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
-	int diff = cJSON_GetObjectItem(root, "diff")->valueint;
+	double diff = cJSON_GetObjectItem(root, "diff")->valuedouble;
 
 	if(is_admin(key)==77){
-		max_diff_gps=(double)diff/100;
+		max_diff_gps=diff;
         count_packets=0;
 	}
 
@@ -274,15 +274,15 @@ static esp_err_t home_set_gps(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
-	int lat = cJSON_GetObjectItem(root, "lat")->valueint;
-	int lon = cJSON_GetObjectItem(root, "long")->valueint;
-    int height = cJSON_GetObjectItem(root, "height")->valueint;
+	double lat = cJSON_GetObjectItem(root, "lat")->valuedouble;
+	double lon = cJSON_GetObjectItem(root, "lon")->valuedouble;
+    double height = cJSON_GetObjectItem(root, "height")->valuedouble;
 
 	if(is_admin(key)==77){
-		receiver[0]=(double)lat/100;
-        receiver[1]=(double)lon/100;
-        receiver[2]=(double)height/100;
-		ESP_LOGI("Home coords","receiver: %f %f %f\r\n",(float)lat/100,(float)lon/100,(float)height/100);
+		receiver[0]=lat;
+        receiver[1]=lon;
+        receiver[2]=height;
+		ESP_LOGI("Home coords","receiver: %f %f %f\r\n",(float)lat,(float)lon,(float)height);
 	}
 
 	cJSON_Delete(root);
@@ -298,9 +298,9 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
-	int lat = cJSON_GetObjectItem(root, "lat")->valueint;
-	int lon = cJSON_GetObjectItem(root, "long")->valueint;
-    int height = cJSON_GetObjectItem(root, "height")->valueint;
+	double lat = cJSON_GetObjectItem(root, "lat")->valuedouble;
+	double lon = cJSON_GetObjectItem(root, "lon")->valuedouble;
+    double height = cJSON_GetObjectItem(root, "height")->valuedouble;
 
 	if(is_admin(key)==77){
         if(gps_ok==1){
@@ -308,10 +308,10 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
                 prev_sputnic[i]=sputnic[i];
             }
         }
-		sputnic[0]=(double)lat/100;
-        sputnic[1]=(double)lon/100;
-        sputnic[2]=(double)height/100;
-		ESP_LOGI("SAT coords","sputnic: %f %f %f\r\n",(float)lat/100,(float)lon/100,(float)height/100);
+		sputnic[0]=lat;
+        sputnic[1]=lon;
+        sputnic[2]=height;
+		ESP_LOGI("SAT coords","sputnic: %f %f %f\r\n",lat,lon,height);
         if (check_gps(prev_sputnic,sputnic,count_packets)==ESP_OK)
         {
             gps_ok=1;
@@ -480,13 +480,13 @@ static esp_err_t delta_angle(httpd_req_t *req)
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
-	int azimut = cJSON_GetObjectItem(root, "azimut")->valueint;
-	int elevation = cJSON_GetObjectItem(root, "elevation")->valueint;
+	double azimut = cJSON_GetObjectItem(root, "azimut")->valuedouble;
+	double elevation = cJSON_GetObjectItem(root, "elevation")->valuedouble;
 
 
     if(is_admin(key)==77){
-    	delta_angleX=(float)azimut/100;
-    	delta_angleY=(float)elevation/100;
+    	delta_angleX=azimut;
+    	delta_angleY=elevation;
     	printf("newdeltaX:%f %f\r\n",delta_angleX,delta_angleY);
     	httpd_resp_sendstr(req, "OK");
     }
