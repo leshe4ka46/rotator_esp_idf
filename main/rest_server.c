@@ -206,9 +206,49 @@ double receiver[3];
 double sputnic[3];
 double angle[2];
 
+double prev_sputnic[2];
+double delta[2];
 #define latb 1.57079633
 #define longb 0
+double max_diff_gps=0.1;
+uint8_t gps_ok;
+uint8_t count_packets=0;
 double absf(double x) { return (x>0)?x:(double)x*-1;}
+static esp_err_t set_gps_diff(httpd_req_t *req)
+{
+	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
+	cJSON *root = cJSON_Parse(buf);
+	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
+	int diff = cJSON_GetObjectItem(root, "diff")->valueint;
+
+	if(is_admin(key)==77){
+		max_diff_gps=(double)diff/100;
+        count_packets=0;
+	}
+
+	cJSON_Delete(root);
+    httpd_resp_sendstr(req, "OK");
+    return ESP_OK;
+}
+
+esp_err_t check_gps(double prev[],double current[],uint8_t pck){
+    esp_err_t retval=ESP_OK;
+    if(pck>1){
+        for(uint8_t i=0;i<2;i++){
+            ESP_LOGI("gps","%d %f %f %f",i,prev[i],current[i],delta[i]);
+            if(absf(absf(prev[i] - current[i])- delta[i])>max_diff_gps){
+                retval = ESP_FAIL;
+            }
+        }
+    }
+    if(retval==ESP_OK){
+        for(uint8_t i=0;i<2;i++){
+            delta[i]=absf(prev[i]-current[i]);
+        }
+    }
+    return retval;
+}
 void aiming(double lata, double longa, double altita, double latc, double longc, double altitc, double *azimut, double *elev) {
     ESP_LOGI("CALC GPS", "%f %f %f %f %f %f", lata,longa,altita,latc,longc,altitc);
     double rp = atan2(sqrt(pow(cos(latb) * sin(longb - longa), 2) + pow(cos(lata) * sin(latb) - sin(lata) * cos(latb) * cos(absf(longb - longa)), 2)), sin(lata) * sin(latb) + cos(lata) * cos(latb) * cos(absf(longb - longa)));
@@ -263,16 +303,32 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
     int height = cJSON_GetObjectItem(root, "height")->valueint;
 
 	if(is_admin(key)==77){
+        if(gps_ok==1){
+            for(uint8_t i=0;i<2;i++){
+                prev_sputnic[i]=sputnic[i];
+            }
+        }
 		sputnic[0]=(double)lat/100;
         sputnic[1]=(double)lon/100;
         sputnic[2]=(double)height/100;
 		ESP_LOGI("SAT coords","sputnic: %f %f %f\r\n",(float)lat/100,(float)lon/100,(float)height/100);
-        if(receiver[0]!=0){
+        if (check_gps(prev_sputnic,sputnic,count_packets)==ESP_OK)
+        {
+            gps_ok=1;
+            if(receiver[0]!=0){
 
-            aiming(radians(receiver[0]), radians(receiver[1]), receiver[2], radians(sputnic[0]), radians(sputnic[1]), sputnic[2], &angle[0], &angle[1]);
-            ESP_LOGI("CALC GPS","%f %f",angle[0], angle[1]);
-            absolute_stepper(0,angle_to_steps(angle[0]-delta_angleX));
-            absolute_stepper(1,angle_to_steps(angle[1]-delta_angleY));
+                aiming(radians(receiver[0]), radians(receiver[1]), receiver[2], radians(sputnic[0]), radians(sputnic[1]), sputnic[2], &angle[0], &angle[1]);
+                ESP_LOGI("CALC GPS","%f %f",angle[0], angle[1]);
+                absolute_stepper(0,angle_to_steps(angle[0]-delta_angleX));
+                absolute_stepper(1,angle_to_steps(angle[1]-delta_angleY));
+            }
+        }
+        else{
+            gps_ok=0;
+            ESP_LOGE("GPS ERROR","CHECK LOGS ABOVE!");
+        }
+        if(count_packets<3){
+            count_packets++;
         }
 	}
 
@@ -492,7 +548,7 @@ esp_err_t start_rest_server(const char *base_path)
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
-    config.max_uri_handlers = 15;
+    config.max_uri_handlers = 16;
     config.lru_purge_enable = true;
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
@@ -567,6 +623,14 @@ esp_err_t start_rest_server(const char *base_path)
 			};
     httpd_register_uri_handler(server, &data_set_satgps_uri);
 
+    httpd_uri_t data_set_diffgps_uri = {
+				.uri = "/api/v1/data/set/diffgps",
+				.method = HTTP_POST,
+				.handler = set_gps_diff,
+				.user_ctx = rest_context
+			};
+    httpd_register_uri_handler(server, &data_set_diffgps_uri);
+
     httpd_uri_t data_set_angles_uri = {
 				.uri = "/api/v1/data/set/angles",
 				.method = HTTP_POST,
@@ -634,6 +698,32 @@ esp_err_t start_rest_server(const char *base_path)
     //init_i2c(7,6,19,8);
     start_monitoring_AS5600();
     ESP_LOGI("RAD","%.51f",radians(180));
+
+    /*double prev[2];
+    double curr[2];
+    curr[0]=51.2;
+    curr[1]=40.2;
+    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,0));
+    prev[0]=51.2;
+    prev[1]=40.2;
+    curr[0]=51;
+    curr[1]=40;
+    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,1));
+    prev[0]=51;
+    prev[1]=40;
+    curr[0]=50.8;
+    curr[1]=39.9;
+    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,2));
+    prev[0]=50.8;
+    prev[1]=39.9;
+    curr[0]=50.7;
+    curr[1]=39.8;
+    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,3));
+    prev[0]=50.7;
+    prev[1]=39.8;
+    curr[0]=-65;
+    curr[1]=39.9;
+    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,4));*/
     return ESP_OK;
 
 }

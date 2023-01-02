@@ -20,7 +20,7 @@
 
 #define STEP_MOTOR_RESOLUTION_HZ 1000000 // 1MHz resolution
 
-#define DO_ROTATE_ENABLED 1
+#define DO_ROTATE_ENABLED 0
 
 uint32_t accel_samplesx = 3200*2;
 uint32_t uniform_speed_hzx = 20000;

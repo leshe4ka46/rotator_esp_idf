@@ -53,26 +53,6 @@ export default {
     }
   },
   created() {
-    /*bus.$on('return_data_angles', (data) => {
-      this.setted_azimut = data.azimut
-      this.setted_elevation = data.elevation
-    })*/
-    /*this.ws = new WebSocket(`ws://${window.location.hostname}/ws`) // `ws://localhost:2000/`
-    this.ws.onopen = function () {
-      // eslint-disable-next-line
-      console.log('WS подключен')
-    }
-    this.ws.onclose = function (eventclose) {
-      // eslint-disable-next-line
-      console.log('Cоеденение закрыто: ')
-      // eslint-disable-next-line
-      console.log(eventclose)
-    }
-    this.ws.onmessage = function (msg) {
-      var response = JSON.parse(msg.data)
-      this.battery = response.voltage.toFixed(2); this.azimut = response.azimut.toFixed(2); this.elevation = response.elevation.toFixed(2)
-    }.bind(this)
-    bus.$on('send_ws', (mess) => { this.ws.send(mess) })*/
     setInterval(() => {
       this.$ajax.get(`/api/v1/data/get/angles`).then((response) => {
         this.battery = response.data.voltage.toFixed(2);

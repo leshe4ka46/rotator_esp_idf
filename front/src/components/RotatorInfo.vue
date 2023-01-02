@@ -4,9 +4,9 @@
       <v-flex xs12 sm6 offset-sm3>
         <v-card>
 
-          <v-card-title primary-title>
+          <v-card-title primary-title >
             <div class="ma-auto">
-              <span class="grey--text">Версия IDF: {{ version }}</span>
+              <span class="grey--text" @click="dev_mode+=1">Версия IDF: {{ version }}</span>
               <br>
               <span class="grey--text">Ядер ESP32: {{ cores }}</span>
               <br>
@@ -26,12 +26,22 @@
 </template>
 
 <script>
+import { bus } from '@/event-bus'
 export default {
   data() {
     return {
       version: null,
       cores: null,
-      revision: null
+      revision: null,
+      dev_mode:0
+    }
+  },
+  watch: {
+    dev_mode(val) {
+      if (val>10){
+        alert("Developer mode enabled");
+        bus.$emit("dev_mode");
+      }
     }
   },
   mounted() {
