@@ -24,13 +24,10 @@
 #include "protocol_examples_common.h"
 #include "esp_wifi.h"
 
-
-
 #include "prov.c"
 #include "rest_server.c"
 
 #include "dnsServer.c"
-#define MDNS_INSTANCE "esp home web server"
 
 #define WIFI_SSID CONFIG_ESP_WIFI_AP_SSID
 #define WIFI_PASS CONFIG_ESP_WIFI_PASSWORD
@@ -42,23 +39,6 @@
 static const char *TAG = "example";
 
 esp_err_t start_rest_server(const char *base_path);
-
-/*static void initialise_mdns(void)
-{
-    mdns_init();
-    mdns_hostname_set(CONFIG_EXAMPLE_MDNS_HOST_NAME);
-    mdns_instance_name_set(MDNS_INSTANCE);
-
-    mdns_txt_item_t serviceTxtData[] = {
-        {"board", "esp32"},
-        {"path", "/"}
-    };
-
-    ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData,
-                                     sizeof(serviceTxtData) / sizeof(serviceTxtData[0])));
-}
-*/
-
 
 esp_err_t init_fs(void)
 {
@@ -157,19 +137,7 @@ void app_main(void)
             esp_restart();
         }
     }
-
-
-
-    /*ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());*/
-    /*initialise_mdns();
-    netbiosns_init();
-    netbiosns_set_name(CONFIG_EXAMPLE_MDNS_HOST_NAME);*/
-
-
     //start_dns_server();
-
-    //ESP_ERROR_CHECK(example_connect());
     ESP_ERROR_CHECK(init_fs());
     ESP_ERROR_CHECK(start_rest_server(CONFIG_EXAMPLE_WEB_MOUNT_POINT));
 }

@@ -3,7 +3,8 @@
     "idf.flashType": "UART",
     "idf.port": "/dev/ttyUSB0",
     "files.associations": {
-        "sdkconfig.h": "c"
+        "sdkconfig.h": "c",
+        "netbiosns.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled",
 }
