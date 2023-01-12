@@ -2,8 +2,8 @@
   <div>
     <v-app id="inspire">
       <v-navigation-drawer v-model="drawer" fixed app clipped>
-        <v-list dense v-model="list_item" rounded>
-          <v-list-tile to="/">
+        <v-list dense v-model="page" rounded>
+          <v-list-tile @click="page=0"  >
             <v-list-tile-action>
               <MdiSvg>{{ mdiHome }}</MdiSvg>
             </v-list-tile-action>
@@ -12,7 +12,7 @@
             </v-list-tile-content>
           </v-list-tile>
 
-          <v-list-tile to="/data" v-if="is_admin == true">
+          <v-list-tile @click="page=1">
             <v-list-tile-action>
               <MdiSvg>{{ mdiChartBoxOutline }}</MdiSvg>
             </v-list-tile-action>
@@ -20,15 +20,6 @@
               <v-list-tile-title>Данные</v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
-          <!--<v-list-tile to="/light" v-if="is_admin==true">
-            <v-list-tile-action>
-              <MdiSvg>{{mdiLampsOutline}}</MdiSvg>
-            </v-list-tile-action>
-            <v-list-tile-content>
-              <v-list-tile-title>Light</v-list-tile-title>
-            </v-list-tile-content>
-          </v-list-tile>-->
-
         </v-list>
       </v-navigation-drawer>
       <v-toolbar color="red accent-4" dark fixed app clipped-left>
@@ -63,9 +54,12 @@
         </v-card>
       </v-dialog>
       <v-content>
-          <v-container fill-height center>
+          <v-container fill-height center style="font-size: 1.2em;">
             <keep-alive>
-              <router-view :key="$route.path" style="font-size: 1.2em;"></router-view>
+              <RotatorMain v-if="page==0"></RotatorMain>
+            </keep-alive>
+            <keep-alive>
+              <RotatorDataset v-if="page==1"></RotatorDataset>
             </keep-alive>
           </v-container>
       </v-content>
@@ -77,13 +71,15 @@
 <script>
 import RotatorAuth from './components/RotatorAuth.vue'
 import RotatorSettings from './components/RotatorSettings.vue'
+import RotatorMain from './components/RotatorMain.vue'
+import RotatorDataset from './components/RotatorDataset.vue'
 import { bus } from '@/event-bus'
 import { mdiMenu, mdiHome, mdiChartBoxOutline, mdiWrenchCog, mdiLoginVariant, mdiLampsOutline } from '@mdi/js'
 export default {
   name: 'app',
   data() {
     return {
-      list_item: 0,
+      page:0,
       mdiWrenchCog,
       mdiLoginVariant,
       mdiMenu,
@@ -97,6 +93,11 @@ export default {
       is_admin: false,
       setted_azimut: 0,
       setted_elevation: 0
+    }
+  },
+  watch:{
+    page(){
+      this.drawer=false
     }
   },
   created() {
@@ -144,7 +145,7 @@ export default {
     }, 100)
   },
   components: {
-    RotatorAuth, RotatorSettings
+    RotatorAuth, RotatorSettings,RotatorDataset,RotatorMain
   },
   methods: {
     open_drawer() {

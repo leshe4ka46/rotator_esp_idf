@@ -20,7 +20,6 @@
 #include "esp_idf_version.h"
 #include "esp_chip_info.h"
 #include "stepper_logic.c"
-
 #include "math.h"
 
 static const char *REST_TAG = "esp-rest";
@@ -91,15 +90,15 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
     int fd = open(filepath, O_RDONLY, 0);
     if (fd == -1) {
         ESP_LOGE(REST_TAG, "Failed to open file : %s", filepath);
-        httpd_resp_set_status(req, "302 Temporary Redirect");
+        //httpd_resp_set_status(req, "302 Temporary Redirect");
 		// Redirect to the "/" root directory
-		httpd_resp_set_hdr(req, "Location", "/");
+		//httpd_resp_set_hdr(req, "Location", "/");
 		// iOS requires content in the response to detect a captive portal, simply redirecting is not sufficient.
-		httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);
+		//httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);
 
-		ESP_LOGI(REST_TAG, "Redirecting to root");
+		//ESP_LOGI(REST_TAG, "Redirecting to root");
         /* Respond with 500 Internal Server Error */
-        //httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr><center>rotator/1.0.1</center></body></html>");
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "<html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title><script>function goto_root(){window.location.href=\"/\"}</script></head><body><center><h1>404 Not Found</h1><button onclick=\"goto_root()\">Go to root</button></center><hr><center>rotator/1.0.1</center></body></html>");
         return ESP_OK;
     }
 
@@ -440,14 +439,14 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 
 
 
-static esp_err_t setXnull(httpd_req_t *req)
+static esp_err_t reset_as5600(httpd_req_t *req)
 {
     char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
     if(is_admin(key)==77){
-    	set_zero_X();
+    	set_zero_as5600();
     	httpd_resp_sendstr(req, "OK");
     }
     else{
@@ -457,22 +456,6 @@ static esp_err_t setXnull(httpd_req_t *req)
     return ESP_OK;
 }
 
-static esp_err_t setYnull(httpd_req_t *req)
-{
-    char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
-    ESP_ERROR_CHECK(get_buf_from_request(req,buf));
-    cJSON *root = cJSON_Parse(buf);
-    const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
-    if(is_admin(key)==77){
-    	set_zero_Y();
-    	httpd_resp_sendstr(req, "OK");
-    }
-    else{
-    	httpd_resp_sendstr(req, "No");
-    }
-    cJSON_Delete(root);
-    return ESP_OK;
-}
 static esp_err_t delta_angle(httpd_req_t *req)
 {
 
@@ -647,21 +630,13 @@ esp_err_t start_rest_server(const char *base_path)
 			};
 	httpd_register_uri_handler(server, &data_set_currentangles_uri);
 
-    httpd_uri_t data_set_nullX_uri = {
-				.uri = "/api/v1/data/set/nullX",
+    httpd_uri_t data_reset_as_uri = {
+				.uri = "/api/v1/reset/as5600/",
 				.method = HTTP_POST,
-				.handler = setXnull,
+				.handler = reset_as5600,
 				.user_ctx = rest_context
 			};
-	httpd_register_uri_handler(server, &data_set_nullX_uri);
-
-	httpd_uri_t data_set_nullY_uri = {
-				.uri = "/api/v1/data/set/nullY",
-				.method = HTTP_POST,
-				.handler = setYnull,
-				.user_ctx = rest_context
-			};
-	httpd_register_uri_handler(server, &data_set_nullY_uri);
+	httpd_register_uri_handler(server, &data_reset_as_uri);
 
     httpd_uri_t data_set_wifi_mode_uri = {
 				.uri = "/api/v1/data/set/wifi_mode",
@@ -694,36 +669,10 @@ esp_err_t start_rest_server(const char *base_path)
 
 
     init_steppers();
-    init_i2c(21,45,48,47);
-    //init_i2c(7,6,19,8);
+    //init_i2c(21,45,48,47); //new
+    init_i2c(7,6,19,8);
     start_monitoring_AS5600();
     ESP_LOGI("RAD","%.51f",radians(180));
-
-    /*double prev[2];
-    double curr[2];
-    curr[0]=51.2;
-    curr[1]=40.2;
-    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,0));
-    prev[0]=51.2;
-    prev[1]=40.2;
-    curr[0]=51;
-    curr[1]=40;
-    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,1));
-    prev[0]=51;
-    prev[1]=40;
-    curr[0]=50.8;
-    curr[1]=39.9;
-    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,2));
-    prev[0]=50.8;
-    prev[1]=39.9;
-    curr[0]=50.7;
-    curr[1]=39.8;
-    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,3));
-    prev[0]=50.7;
-    prev[1]=39.8;
-    curr[0]=-65;
-    curr[1]=39.9;
-    ESP_LOGI("CHECKGPS","%d",check_gps(prev,curr,4));*/
     return ESP_OK;
 
 }

@@ -6,6 +6,18 @@
 #include "esp_log.h"
 #include "stepper_motor_encoder.h"
 #include "as5600_lib.c"
+
+
+#define STEP_MOTOR_GPIO_ENX       4
+#define STEP_MOTOR_GPIO_DIRX      18
+#define STEP_MOTOR_GPIO_STEPX     17
+
+#define STEP_MOTOR_GPIO_ENY       5
+#define STEP_MOTOR_GPIO_DIRY      16
+#define STEP_MOTOR_GPIO_STEPY     15
+
+
+/*
 #define STEP_MOTOR_GPIO_ENX       14//4
 #define STEP_MOTOR_GPIO_DIRX      12//18
 #define STEP_MOTOR_GPIO_STEPX     13//17
@@ -14,6 +26,7 @@
 #define STEP_MOTOR_GPIO_DIRY      9//16
 #define STEP_MOTOR_GPIO_STEPY     10//15
 
+*/
 #define STEP_MOTOR_ENABLE_LEVEL  0 // DRV8825 is enabled on low level
 #define STEP_MOTOR_SPIN_DIR_CLOCKWISE 0
 #define STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE !STEP_MOTOR_SPIN_DIR_CLOCKWISE
@@ -85,6 +98,7 @@ void stepperX_task(void *pvParameter)
     rmt_transmit_config_t tx_configX = {
         .loop_count = 0,
     };
+	curr_steps_X=steps_X=get_target(0);
 	while(1){
 		if(steps_X!=curr_steps_X){
 			gpio_set_level(STEP_MOTOR_GPIO_DIRX, (steps_X>curr_steps_X)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
@@ -184,6 +198,7 @@ void stepperY_task(void *pvParameter)
 	rmt_transmit_config_t tx_configY = {
 		.loop_count = 0,
 	};
+	steps_Y=curr_steps_Y=get_target(1);
 	while(1){
 		if(steps_Y!=curr_steps_Y){
 			gpio_set_level(STEP_MOTOR_GPIO_DIRY, (steps_Y>curr_steps_Y)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
@@ -247,8 +262,10 @@ esp_err_t delta_stepper(uint8_t idx,int32_t delta){
 	return ESP_OK;
 }
 esp_err_t absolute_stepper(uint8_t idx,int32_t steps){
+	set_target(steps,idx);
 	if(idx==0){
 		steps_X=steps;
+
 	}
 	else if(idx==1){
 		steps_Y=steps;

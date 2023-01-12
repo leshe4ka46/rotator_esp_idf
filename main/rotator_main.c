@@ -6,6 +6,10 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
+#ifndef __nvs_logic_inc_
+#include "nvs_logic.c"
+#endif
+
 #include "sdkconfig.h"
 #include "driver/gpio.h"
 #include "esp_vfs_semihost.h"
@@ -20,9 +24,7 @@
 #include "protocol_examples_common.h"
 #include "esp_wifi.h"
 
-#ifndef __nvs_logic_inc_
-#include "nvs_logic.c"
-#endif
+
 
 #include "prov.c"
 #include "rest_server.c"
@@ -165,7 +167,7 @@ void app_main(void)
     netbiosns_set_name(CONFIG_EXAMPLE_MDNS_HOST_NAME);*/
 
 
-    //start_dns_server();
+    start_dns_server();
 
     //ESP_ERROR_CHECK(example_connect());
     ESP_ERROR_CHECK(init_fs());

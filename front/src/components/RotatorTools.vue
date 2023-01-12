@@ -7,7 +7,7 @@
         Отправить
       </v-btn>
     </v-sheet>
-    <br><br>
+    <br>
     <p>Подключение</p>
     <v-radio-group v-model="val" mandatory>
       <label v-for="(n,index) in data" :key="index" style="font-size:1.25em;">
@@ -30,6 +30,11 @@
       </p>
     </div>
     <v-btn tile color="success" @click="save_wireless_mode">Сохранить</v-btn>
+    <br>
+
+    <v-btn depressed color="primary" @click="zero_as5600">
+      Сбросить значение датчика углов
+    </v-btn>
     <v-snackbar
       v-model="snackbar"
       :timeout="2000">
@@ -52,7 +57,12 @@ export default {
   },
 
   methods: {
-
+    zero_as5600() {
+      this.$ajax
+        .post('/api/v1/reset/as5600/', {
+          key: localStorage.getItem('rotator_client_id')
+        })
+    },
     sendangles() {
       this.$ajax
         .post('/api/v1/data/set/currentangles', {

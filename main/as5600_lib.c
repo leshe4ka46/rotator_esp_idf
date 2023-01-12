@@ -4,6 +4,10 @@
  *  Created on: 2 нояб. 2022 г.
  *      Author: alex9
  */
+#ifndef __nvs_logic_inc_
+#include "nvs_logic.c"
+#endif
+
 #include <stdio.h>
 #include "esp_log.h"
 #include "driver/i2c.h"
@@ -87,33 +91,38 @@ float as5600_get_currentAngle(uint8_t device_addr,i2c_port_t i2c_port)
 }
 
 
-float as5600_angleX=0,as5600_prevangleX=0,as5600_delta_angleX=0,as5600_start_delta_angleX=0,as5600_temp_angleX=0;
+float as5600_angleX=0,as5600_prevangleX=0,as5600_delta_angleX=0,as5600_temp_angleX=0;
 int32_t as5600_turnsX=0;
 
-float as5600_angleY=0,as5600_prevangleY=0,as5600_delta_angleY=0,as5600_start_delta_angleY=0,as5600_temp_angleY=0;
+float as5600_angleY=0,as5600_prevangleY=0,as5600_delta_angleY=0,as5600_temp_angleY=0;
 int32_t as5600_turnsY=0;
-
+uint8_t upd_turns=0;
 void tickAS5600(void *pvParameter)
 {
+	get_turns();
+	as5600_turnsX=get_turns_X();
+	as5600_turnsY=get_turns_Y();
+
+	get_delta();
 	as5600_prevangleX=as5600_get_currentAngle(As5600_Addr,I2C_X);
 	as5600_angleX=as5600_prevangleX;
-	as5600_delta_angleX=as5600_angleX;
-	as5600_start_delta_angleX=as5600_delta_angleX;
+	as5600_delta_angleX=get_delta_X();//=as5600_angleX;
 
 	as5600_prevangleY=as5600_get_currentAngle(As5600_Addr,I2C_Y);
 	as5600_angleY=as5600_prevangleY;
-	as5600_delta_angleY=as5600_angleY;
-	as5600_start_delta_angleY=as5600_delta_angleY;
+	as5600_delta_angleY=get_delta_Y();//=as5600_angleY;
 	while(1)
 	  {
 		  	as5600_temp_angleX = as5600_get_currentAngle(As5600_Addr,I2C_X);
 			if (as5600_temp_angleX - as5600_prevangleX > 180 && as5600_prevangleX < 180)
 			{
 				as5600_turnsX -= 1;
+				upd_turns=1;
 			}
 			if (as5600_temp_angleX - as5600_prevangleX < -180 && as5600_prevangleX > 180)
 			{
 				as5600_turnsX += 1;
+				upd_turns=1;
 			}
 			as5600_angleX = as5600_temp_angleX + 360 * as5600_turnsX - as5600_delta_angleX;
 			as5600_prevangleX = as5600_temp_angleX;
@@ -124,39 +133,38 @@ void tickAS5600(void *pvParameter)
 			if (as5600_temp_angleY - as5600_prevangleY > 180 && as5600_prevangleY < 180)
 			{
 				as5600_turnsY -= 1;
+				upd_turns=1;
 			}
 			if (as5600_temp_angleY - as5600_prevangleY < -180 && as5600_prevangleY > 180)
 			{
 				as5600_turnsY += 1;
+				upd_turns=1;
 			}
 			as5600_angleY = as5600_temp_angleY + 360 * as5600_turnsY - as5600_delta_angleY;
 			as5600_prevangleY = as5600_temp_angleY;
+
+			if(upd_turns==1){
+				set_turns(as5600_turnsX,as5600_turnsY);
+				upd_turns=0;
+			}
 			vTaskDelay(pdMS_TO_TICKS(5));
 	  }
 }
 void start_monitoring_AS5600(){
 	xTaskCreatePinnedToCore(tickAS5600 , "tickAS5600", 1024*2, NULL, 10, NULL,1);
 }
-int count_zerosX=0;
-void set_zero_X(){
-	//as5600_angleX+=as5600_deltaangleX;
-	if(count_zerosX==0){as5600_delta_angleX=as5600_angleX+as5600_delta_angleX;}
-	else{as5600_delta_angleX=as5600_start_delta_angleX;}
-	count_zerosX+=1;
-	if(count_zerosX==2){
-		count_zerosX=0;
-	}
+
+
+void set_zero_as5600(){
+	set_turns(0,0);
+	as5600_turnsX=as5600_turnsY=0;
+	set_delta(as5600_temp_angleX,as5600_temp_angleY);
+	as5600_delta_angleX=as5600_temp_angleX;
+	as5600_delta_angleY=as5600_temp_angleY;
+
+
 }
-int count_zerosY=0;
-void set_zero_Y(){
-	//as5600_angleX+=as5600_deltaangleX;
-	if(count_zerosY==0){as5600_delta_angleY=as5600_angleY+as5600_delta_angleY;}
-	else{as5600_delta_angleY=as5600_start_delta_angleY;}
-	count_zerosY+=1;
-	if(count_zerosY==2){
-		count_zerosY=0;
-	}
-}
+
 
 float as5600_getAngleX(){
 		ESP_LOGI(AS_TAGX,"%f  temp:%f  delta:%f",as5600_angleX,as5600_temp_angleX,as5600_delta_angleX);

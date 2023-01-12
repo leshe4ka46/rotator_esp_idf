@@ -39,7 +39,7 @@ export default {
   watch: {
     dev_mode(val) {
       if (val>10){
-        alert("Developer mode enabled");
+        //alert("Developer mode enabled");
         bus.$emit("dev_mode");
       }
     }

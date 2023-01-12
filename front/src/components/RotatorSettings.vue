@@ -11,7 +11,6 @@
       <v-tab tab="1" style="font-size:1em;">
         Информация
       </v-tab>
-
       <v-tab tab="2" style="font-size: 1em;" v-if="dev_mode==true">
         Dev mode
       </v-tab>
