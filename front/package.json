@@ -13,7 +13,7 @@
         "gzip": "cd dist/js && sudo 7z a -tgzip app.js.gz app.js"
     },
     "dependencies": {
-        "@material-design-icons/svg": "^0.13.0",
+        "@material-design-icons/svg": "^0.14.2",
         "@mdi/js": "^7.0.96",
         "@yeliulee/vue-mdi-svg": "^1.1.0",
         "axios": "^1.1.2",
