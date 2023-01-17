@@ -3,7 +3,8 @@ name: "Auto labeling for a pull request"
 on:
 
   - pull_request_target
-
+  - push
+  - deployment 
 jobs:
 
   triage:
