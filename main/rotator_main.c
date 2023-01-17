@@ -137,7 +137,7 @@ void app_main(void)
             esp_restart();
         }
     }
-    start_dns_server();
+    //start_dns_server();
     ESP_ERROR_CHECK(init_fs());
     ESP_ERROR_CHECK(start_rest_server(CONFIG_EXAMPLE_WEB_MOUNT_POINT));
 }
