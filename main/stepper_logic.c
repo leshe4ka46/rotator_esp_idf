@@ -309,3 +309,9 @@ esp_err_t set_pos(uint8_t idx,int32_t steps){
 	}
 	return ESP_OK;
 }
+
+esp_err_t reset_all_positions(){
+	steps_X=curr_steps_X=steps_Y=curr_steps_Y=0;
+	set_zero_as5600();
+	return ESP_OK;
+}

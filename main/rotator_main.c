@@ -6,14 +6,12 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-#ifndef __nvs_logic_inc_
-#include "nvs_logic.c"
-#endif
 
 #include "sdkconfig.h"
 #include "driver/gpio.h"
 #include "esp_vfs_semihost.h"
 #include "esp_vfs_fat.h"
+
 #include "esp_spiffs.h"
 #include "sdmmc_cmd.h"
 #include "nvs_flash.h"
@@ -23,6 +21,10 @@
 #include "lwip/apps/netbiosns.h"
 #include "protocol_examples_common.h"
 #include "esp_wifi.h"
+
+#ifndef __nvs_logic_inc_
+#include "nvs_logic.c"
+#endif
 
 #include "prov.c"
 #include "rest_server.c"

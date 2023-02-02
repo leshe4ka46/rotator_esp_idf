@@ -8,6 +8,7 @@
 */
 
 //#include "as5600_lib.c"
+#include "esp_vfs.h"
 #include <string.h>
 #include <fcntl.h>
 #include "esp_http_server.h"
@@ -20,6 +21,7 @@
 #include "esp_idf_version.h"
 #include "esp_chip_info.h"
 #include "stepper_logic.c"
+
 #include "math.h"
 
 static const char *REST_TAG = "esp-rest";
@@ -387,11 +389,15 @@ static esp_err_t authuser(httpd_req_t *req)
 
     return ESP_OK;
 }
+esp_err_t check_args(){
+    
+}
 static esp_err_t whoami(httpd_req_t *req)
 {
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
+
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 
     switch(is_admin(key)){
@@ -399,8 +405,8 @@ static esp_err_t whoami(httpd_req_t *req)
     	httpd_resp_sendstr(req, "{\"role\":\"admin\"}");
     	break;
     case 0:
-        	httpd_resp_sendstr(req, "{\"role\":\"user\"}");
-        	break;
+        httpd_resp_sendstr(req, "{\"role\":\"user\"}");
+        break;
     }
     cJSON_Delete(root);
     return ESP_OK;
@@ -446,7 +452,7 @@ static esp_err_t reset_as5600(httpd_req_t *req)
     cJSON *root = cJSON_Parse(buf);
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
     if(is_admin(key)==77){
-    	set_zero_as5600();
+    	reset_all_positions();
     	httpd_resp_sendstr(req, "OK");
     }
     else{
@@ -657,8 +663,6 @@ esp_err_t start_rest_server(const char *base_path)
 
     //httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
 
-
-    /* URI handler for getting web server files */
     httpd_uri_t common_get_uri = {
         .uri = "/*",
         .method = HTTP_GET,

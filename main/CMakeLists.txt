@@ -1,5 +1,5 @@
-idf_component_register(SRCS "rest_server.c" "rotator_main.c"
-                            "prov.c"
+idf_component_register(SRCS "rest_server.c"
+                            "rotator_main.c"
                             "as5600_lib.c"
                             "nvs_logic.c"
                             "dnsServer.c"
