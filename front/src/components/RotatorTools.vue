@@ -33,7 +33,7 @@
     <br>
 
     <v-btn depressed color="primary" @click="zero_as5600">
-      Сбросить значение датчика углов
+      Сбросить значение всех углов
     </v-btn>
     <v-snackbar
       v-model="snackbar"
