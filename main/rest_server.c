@@ -100,7 +100,7 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
 
 		//ESP_LOGI(REST_TAG, "Redirecting to root");
         /* Respond with 500 Internal Server Error */
-        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "<html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title><script>function goto_root(){window.location.href=\"/\"}</script></head><body><center><h1>404 Not Found</h1><button onclick=\"goto_root()\">Go to root</button></center><hr><center>rotator/1.0.1</center></body></html>");
+        httpd_resp_send(req, "<html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title><script>function goto_root(){window.location.href=\"/\"}</script></head><body><center><h1>404 Not Found</h1><button onclick=\"goto_root()\">Go to root</button></center><hr><center>rotator/1.0.1</center></body></html>", HTTPD_RESP_USE_STRLEN);
         return ESP_OK;
     }
 
@@ -188,6 +188,10 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"azimut") || !cJSON_HasObjectItem(root,"elevation")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 	double azimut = cJSON_GetObjectItem(root, "azimut")->valuedouble;
 	double elevation = cJSON_GetObjectItem(root, "elevation")->valuedouble;
@@ -220,6 +224,10 @@ static esp_err_t set_gps_diff(httpd_req_t *req)
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"diff")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 	double diff = cJSON_GetObjectItem(root, "diff")->valuedouble;
 
@@ -274,6 +282,10 @@ static esp_err_t home_set_gps(httpd_req_t *req)
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"lat") || !cJSON_HasObjectItem(root,"lon") || !cJSON_HasObjectItem(root,"height")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 	double lat = cJSON_GetObjectItem(root, "lat")->valuedouble;
 	double lon = cJSON_GetObjectItem(root, "lon")->valuedouble;
@@ -298,6 +310,10 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"lat") || !cJSON_HasObjectItem(root,"lon") || !cJSON_HasObjectItem(root,"height")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 	double lat = cJSON_GetObjectItem(root, "lat")->valuedouble;
 	double lon = cJSON_GetObjectItem(root, "lon")->valuedouble;
@@ -346,10 +362,13 @@ static esp_err_t adduser(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 
 	cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
     set_user(key,0);
     cJSON_Delete(root);
-    //free(key);
     httpd_resp_sendstr(req, "OK");
     return ESP_OK;
 }
@@ -374,6 +393,10 @@ static esp_err_t authuser(httpd_req_t *req)
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"login") || !cJSON_HasObjectItem(root,"password")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
     const char * login = cJSON_GetObjectItem(root, "login")->valuestring;
     const char * password = cJSON_GetObjectItem(root, "password")->valuestring;
@@ -389,15 +412,15 @@ static esp_err_t authuser(httpd_req_t *req)
 
     return ESP_OK;
 }
-esp_err_t check_args(){
-    
-}
 static esp_err_t whoami(httpd_req_t *req)
 {
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
-
+    if (!cJSON_HasObjectItem(root,"key")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 
     switch(is_admin(key)){
@@ -416,6 +439,10 @@ static esp_err_t clearnvs(httpd_req_t *req)
 	char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 
     switch(is_admin(key)){
@@ -450,6 +477,10 @@ static esp_err_t reset_as5600(httpd_req_t *req)
     char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
     if(is_admin(key)==77){
     	reset_all_positions();
@@ -468,6 +499,10 @@ static esp_err_t delta_angle(httpd_req_t *req)
     char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"azimut") || !cJSON_HasObjectItem(root,"elevation")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 	double azimut = cJSON_GetObjectItem(root, "azimut")->valuedouble;
 	double elevation = cJSON_GetObjectItem(root, "elevation")->valuedouble;
@@ -492,6 +527,10 @@ static esp_err_t wifi_mode_set(httpd_req_t *req)
     char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"mode")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
 	int8_t mode = cJSON_GetObjectItem(root, "mode")->valueint;
 
@@ -515,6 +554,10 @@ static esp_err_t restart_esp(httpd_req_t *req)
     char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
     if(is_admin(key)==77){
         esp_restart();
@@ -673,8 +716,8 @@ esp_err_t start_rest_server(const char *base_path)
 
 
     init_steppers();
-    //init_i2c(21,45,48,47); //new
-    init_i2c(7,6,19,8);
+    init_i2c(21,45,48,47); //new
+    //init_i2c(7,6,19,8);
     start_monitoring_AS5600();
     ESP_LOGI("RAD","%.51f",radians(180));
     return ESP_OK;

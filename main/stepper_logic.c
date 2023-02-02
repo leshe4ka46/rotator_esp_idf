@@ -7,7 +7,7 @@
 #include "stepper_motor_encoder.h"
 #include "as5600_lib.c"
 
-
+/*
 #define STEP_MOTOR_GPIO_ENX       4
 #define STEP_MOTOR_GPIO_DIRX      18
 #define STEP_MOTOR_GPIO_STEPX     17
@@ -15,18 +15,19 @@
 #define STEP_MOTOR_GPIO_ENY       5
 #define STEP_MOTOR_GPIO_DIRY      16
 #define STEP_MOTOR_GPIO_STEPY     15
-
-
-/*
-#define STEP_MOTOR_GPIO_ENX       14//4
-#define STEP_MOTOR_GPIO_DIRX      12//18
-#define STEP_MOTOR_GPIO_STEPX     13//17
-
-#define STEP_MOTOR_GPIO_ENY       11//5
-#define STEP_MOTOR_GPIO_DIRY      9//16
-#define STEP_MOTOR_GPIO_STEPY     10//15
-
 */
+
+
+#define STEP_MOTOR_GPIO_ENX       14
+#define STEP_MOTOR_GPIO_DIRX      12
+#define STEP_MOTOR_GPIO_STEPX     13
+
+#define STEP_MOTOR_GPIO_ENY       11
+#define STEP_MOTOR_GPIO_DIRY      9
+#define STEP_MOTOR_GPIO_STEPY     10
+
+
+
 #define STEP_MOTOR_ENABLE_LEVEL  0 // DRV8825 is enabled on low level
 #define STEP_MOTOR_SPIN_DIR_CLOCKWISE 0
 #define STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE !STEP_MOTOR_SPIN_DIR_CLOCKWISE
