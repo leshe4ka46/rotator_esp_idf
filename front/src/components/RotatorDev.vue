@@ -3,6 +3,9 @@
     <v-btn depressed color="error" @click="reset">
       Delete all data
     </v-btn>
+    <v-btn depressed color="error" @click="zero_as5600">
+      Сбросить значение всех углов
+    </v-btn>
     <v-sheet color="white">
       <v-text-field label="GPS diff" v-model="diffgps" type="number"/>
       <v-btn tile color="success" @click="senddiff">
@@ -23,6 +26,12 @@ export default {
   },
 
   methods: {
+    zero_as5600() {
+      this.$ajax
+        .post('/api/v1/reset/as5600/', {
+          key: localStorage.getItem('rotator_client_id')
+        })
+    },
     reset() {
       this.$ajax
         .post('/api/v1/users/clear', {

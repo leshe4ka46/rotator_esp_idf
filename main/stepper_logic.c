@@ -17,7 +17,7 @@
 #define STEP_MOTOR_GPIO_STEPY     15
 */
 
-
+/*
 #define STEP_MOTOR_GPIO_ENX       14
 #define STEP_MOTOR_GPIO_DIRX      12
 #define STEP_MOTOR_GPIO_STEPX     13
@@ -25,6 +25,17 @@
 #define STEP_MOTOR_GPIO_ENY       11
 #define STEP_MOTOR_GPIO_DIRY      9
 #define STEP_MOTOR_GPIO_STEPY     10
+*/
+
+
+
+#define STEP_MOTOR_GPIO_ENX       11
+#define STEP_MOTOR_GPIO_DIRX      9
+#define STEP_MOTOR_GPIO_STEPX     10
+
+#define STEP_MOTOR_GPIO_ENY       14
+#define STEP_MOTOR_GPIO_DIRY      12
+#define STEP_MOTOR_GPIO_STEPY     13
 
 
 
@@ -34,15 +45,15 @@
 
 #define STEP_MOTOR_RESOLUTION_HZ 1000000 // 1MHz resolution
 
-#define DO_ROTATE_ENABLED 0
+#define DO_ROTATE_ENABLED 1
 
 uint32_t accel_samplesx = 3200*2;
-uint32_t uniform_speed_hzx = 20000;
+uint32_t uniform_speed_hzx = 18000;
 uint32_t decel_samplesx = 3200*2;
 uint32_t do_rotate_speed_hzx = 10000;
 
 uint32_t accel_samplesy = 3200*2;
-uint32_t uniform_speed_hzy = 20000;
+uint32_t uniform_speed_hzy = 18000;
 uint32_t decel_samplesy = 3200*2;
 uint32_t do_rotate_speed_hzy = 10000;
 
@@ -314,5 +325,11 @@ esp_err_t set_pos(uint8_t idx,int32_t steps){
 esp_err_t reset_all_positions(){
 	steps_X=curr_steps_X=steps_Y=curr_steps_Y=0;
 	set_zero_as5600();
+	set_target(0,0);
+	set_target(0,1);
 	return ESP_OK;
+}
+
+uint8_t motor_isready(){
+	return motorX_isReady&&motorY_isReady;
 }

@@ -382,6 +382,8 @@ static esp_err_t anglesdatatx(httpd_req_t *req)
 	cJSON_AddNumberToObject(root, "voltage", 0.00);
 	cJSON_AddNumberToObject(root, "setted_azimut", (float)get_pos(0)/STEPS_PER_ROTATION/STEPPERS_MICROSTEP/STEPPERS_GEAR_RATIO*360+delta_angleX);
 	cJSON_AddNumberToObject(root, "setted_elevation", (float)get_pos(1)/STEPS_PER_ROTATION/STEPPERS_MICROSTEP/STEPPERS_GEAR_RATIO*360+delta_angleY);
+    cJSON_AddNumberToObject(root, "is_ready", motor_isready());
+    cJSON_AddNumberToObject(root, "delta_enabled", (delta_angleX==0&&delta_angleY==0)?0:1);
 	const char *sys_info = cJSON_Print(root);
 	httpd_resp_sendstr(req, sys_info);
 	free((void *)sys_info);
@@ -474,6 +476,10 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
 
 static esp_err_t reset_as5600(httpd_req_t *req)
 {
+    if(!motor_isready()){
+        httpd_resp_sendstr(req, "MOTOR IS NOT READY!");
+        return ESP_OK;
+    }
     char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
@@ -716,6 +722,7 @@ esp_err_t start_rest_server(const char *base_path)
 
 
     init_steppers();
+    //init_i2c(48,47,21,45);//test
     init_i2c(21,45,48,47); //new
     //init_i2c(7,6,19,8);
     start_monitoring_AS5600();

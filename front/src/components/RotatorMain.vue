@@ -17,7 +17,8 @@
               <h3><span class="black--text">{{ setted_azimut }}&deg; {{ setted_elevation }}&deg;</span></h3>
               <span class="grey--text">Заданные значения</span>
               <br>
-
+              <span class="red--text" v-if="delta_enabled">Задан относительный угол</span>
+              <br v-if="delta_enabled">
             </div>
           </v-card-title>
         </v-card>
@@ -32,7 +33,7 @@
 </template>
 
 <script>
-//import { bus } from '@/event-bus'
+import { bus } from '@/event-bus'
 
 export default {
   name: 'RotatorMain',
@@ -49,7 +50,14 @@ export default {
       alert_axes: false,
       motors: "",
       alert_x: false,
-      alert_y: false
+      alert_y: false,
+      delta_enabled:0,
+      is_ready:1,
+    }
+  },
+  watch:{
+    is_ready(val){
+      bus.$emit('is_ready',val)
     }
   },
   created() {
@@ -60,6 +68,8 @@ export default {
         this.elevation = response.data.elevation.toFixed(2);
         this.setted_azimut = response.data.setted_azimut.toFixed(3);
         this.setted_elevation = response.data.setted_elevation.toFixed(3);
+        this.delta_enabled=response.data.delta_enabled;
+        this.is_ready=response.data.is_ready;
         this.check_angles();
       });
     }, 1000);

@@ -18,7 +18,7 @@ static const char *AS_TAGX = "AS5600 X";
 static const char *AS_TAGY = "AS5600 Y";
 #define I2C_X              I2C_NUM_0
 #define I2C_Y              I2C_NUM_1
-uint8_t As5600_Addr=0x36;
+uint8_t as5600_Addr=0x36;
 #define RawAngle_Addr 0x0C
 #define I2C_WRITE_MODE      0
 #define I2C_READ_MODE       1
@@ -54,7 +54,7 @@ void init_i2c(uint8_t i2c_sdaX_pin,uint8_t i2c_sclX_pin,uint8_t i2c_sdaY_pin,uin
 	};
 	ESP_ERROR_CHECK(i2c_param_config(I2C_Y, &confY));
 	ESP_ERROR_CHECK(i2c_driver_install(I2C_Y, confY.mode, 0, 0, 0));
-	ESP_LOGI(AS_TAG, "I2C initialized");
+	ESP_LOGI("AS5600", "I2C initialized");
 }
 
 float as5600_get_currentAngle(uint8_t device_addr,i2c_port_t i2c_port)
@@ -104,16 +104,16 @@ void tickAS5600(void *pvParameter)
 	as5600_turnsY=get_turns_Y();
 
 	get_delta();
-	as5600_prevangleX=as5600_get_currentAngle(As5600_Addr,I2C_X);
+	as5600_prevangleX=as5600_get_currentAngle(as5600_Addr,I2C_X);
 	as5600_angleX=as5600_prevangleX;
 	as5600_delta_angleX=get_delta_X();//=as5600_angleX;
 
-	as5600_prevangleY=as5600_get_currentAngle(As5600_Addr,I2C_Y);
+	as5600_prevangleY=as5600_get_currentAngle(as5600_Addr,I2C_Y);
 	as5600_angleY=as5600_prevangleY;
 	as5600_delta_angleY=get_delta_Y();//=as5600_angleY;
 	while(1)
 	  {
-		  	as5600_temp_angleX = as5600_get_currentAngle(As5600_Addr,I2C_X);
+		  	as5600_temp_angleX = as5600_get_currentAngle(as5600_Addr,I2C_X);
 			if (as5600_temp_angleX - as5600_prevangleX > 180 && as5600_prevangleX < 180)
 			{
 				as5600_turnsX -= 1;
@@ -129,7 +129,7 @@ void tickAS5600(void *pvParameter)
 
 
 
-			as5600_temp_angleY = as5600_get_currentAngle(As5600_Addr,I2C_Y);
+			as5600_temp_angleY = as5600_get_currentAngle(as5600_Addr,I2C_Y);
 			if (as5600_temp_angleY - as5600_prevangleY > 180 && as5600_prevangleY < 180)
 			{
 				as5600_turnsY -= 1;
@@ -161,9 +161,11 @@ void set_zero_as5600(){
 	set_delta(as5600_temp_angleX,as5600_temp_angleY);
 	as5600_delta_angleX=as5600_temp_angleX;
 	as5600_delta_angleY=as5600_temp_angleY;
-
-
+	upd_turns=1;
 }
+
+
+
 
 
 float as5600_getAngleX(){

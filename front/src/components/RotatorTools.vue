@@ -32,9 +32,7 @@
     <v-btn tile color="success" @click="save_wireless_mode">Сохранить</v-btn>
     <br>
 
-    <v-btn depressed color="primary" @click="zero_as5600">
-      Сбросить значение всех углов
-    </v-btn>
+
     <v-snackbar
       v-model="snackbar"
       :timeout="2000">
@@ -57,12 +55,6 @@ export default {
   },
 
   methods: {
-    zero_as5600() {
-      this.$ajax
-        .post('/api/v1/reset/as5600/', {
-          key: localStorage.getItem('rotator_client_id')
-        })
-    },
     sendangles() {
       this.$ajax
         .post('/api/v1/data/set/currentangles', {

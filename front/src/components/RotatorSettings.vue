@@ -38,6 +38,7 @@
     </v-container>
   </v-card>
 </template>
+
 <script>
 /* eslint-disable */
 import { bus } from '@/event-bus'
