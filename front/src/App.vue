@@ -26,7 +26,7 @@
         <v-toolbar-side-icon @click.stop="open_drawer">
           <MdiSvg>{{ mdiMenu }}</MdiSvg>
         </v-toolbar-side-icon>
-        <v-toolbar-title>ESP Rotator</v-toolbar-title>
+        <v-toolbar-title>SPORADIC Rotator</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon v-if="is_admin == 0">
           <div @click.stop="login_dialog = true">
@@ -109,7 +109,7 @@ export default {
             key: this.makeid(8)
           })
           .then(function (data) { // eslint-disable-next-line
-            console.log(data);
+            //console.log(data);
             if (data.data === 'OK') {
               localStorage.setItem('rotator_client_id', key)
             }

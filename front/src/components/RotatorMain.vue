@@ -53,6 +53,7 @@ export default {
       alert_y: false,
       delta_enabled:0,
       is_ready:1,
+      dorotate_enabled:null,
     }
   },
   watch:{
@@ -70,6 +71,8 @@ export default {
         this.setted_elevation = response.data.setted_elevation.toFixed(3);
         this.delta_enabled=response.data.delta_enabled;
         this.is_ready=response.data.is_ready;
+        this.dorotate_enabled=response.data.dorotate_enabled;
+        bus.$emit('dorotate_enabled',this.dorotate_enabled)
         this.check_angles();
       });
     }, 1000);

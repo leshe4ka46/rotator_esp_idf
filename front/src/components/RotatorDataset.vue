@@ -1,10 +1,5 @@
 <template>
   <div>
-    <div v-if="is_admin == 0">
-      AUTH NEDED
-    </div>
-    <div v-if="is_admin == 1">
-      <!--<v-select :items="list" :appendIcon="iconarrow" v-model="selectedOption" style="width:30%;"></v-select>-->
       <v-layout text-xs-center wrap>
         <v-card max-width="300px" flat class="bcg">
           <v-container>
@@ -51,7 +46,6 @@
           </v-card-actions>
         </v-card>
       </v-layout>
-    </div>
     <v-snackbar
       v-model="snackbar"
       :timeout="2000">

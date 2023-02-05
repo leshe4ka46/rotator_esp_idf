@@ -45,7 +45,9 @@
 
 #define STEP_MOTOR_RESOLUTION_HZ 1000000 // 1MHz resolution
 
-#define DO_ROTATE_ENABLED 1
+//#define DO_ROTATE_ENABLED 1
+uint8_t DO_ROTATE_ENABLED;
+
 
 uint32_t accel_samplesx = 3200*2;
 uint32_t uniform_speed_hzx = 18000;
@@ -258,6 +260,9 @@ void stepperY_task(void *pvParameter)
 }
 
 esp_err_t init_steppers(){
+    nvs_handle_t ws = open_nvs("settings", NVS_READONLY);
+    check_err(nvs_get_u8(ws, "dorotate", &DO_ROTATE_ENABLED));
+    nvs_close(ws);
     ESP_LOGI("STEPPERS", "Initing");
     xTaskCreatePinnedToCore(&stepperX_task, "stepperX_task", 1024*3, NULL, 5, NULL,1);
     xTaskCreatePinnedToCore(&stepperY_task, "stepperY_task", 1024*3, NULL, 5, NULL,1);
@@ -332,4 +337,11 @@ esp_err_t reset_all_positions(){
 
 uint8_t motor_isready(){
 	return motorX_isReady&&motorY_isReady;
+}
+
+void do_rotate_set(uint8_t val){
+	DO_ROTATE_ENABLED=val;
+}
+uint8_t do_rotate_get(){
+	return DO_ROTATE_ENABLED;
 }

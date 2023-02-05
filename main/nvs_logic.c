@@ -134,23 +134,7 @@ int8_t get_wifi()
 }
 
 
-esp_err_t set_pr_state(int8_t value)
-{
-    nvs_handle_t ws = open_nvs("wifi_settings", NVS_READWRITE);
-    check_err(nvs_set_i8(ws, "prstate", value));
-    nvs_commit(ws);
-    nvs_close(ws);
-    return ESP_OK;
-}
 
-int8_t get_pr_state()
-{
-    int8_t value;
-    nvs_handle_t ws = open_nvs("wifi_settings", NVS_READONLY);
-    check_err(nvs_get_i8(ws, "prstate", &value));
-    nvs_close(ws);
-    return value;
-}
 
 
 

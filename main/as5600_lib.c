@@ -13,9 +13,7 @@
 #include "driver/i2c.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-static const char *AS_TAG = "AS5600";
-static const char *AS_TAGX = "AS5600 X";
-static const char *AS_TAGY = "AS5600 Y";
+
 #define I2C_X              I2C_NUM_0
 #define I2C_Y              I2C_NUM_1
 uint8_t as5600_Addr=0x36;
@@ -169,14 +167,14 @@ void set_zero_as5600(){
 
 
 float as5600_getAngleX(){
-		ESP_LOGI(AS_TAGX,"%f  temp:%f  delta:%f",as5600_angleX,as5600_temp_angleX,as5600_delta_angleX);
+		ESP_LOGI("AS5600 X","%f  temp:%f  delta:%f",as5600_angleX,as5600_temp_angleX,as5600_delta_angleX);
 		return as5600_angleX;
 }
 float as5600_getAngleXnolog(){
 		return as5600_angleX;
 }
 float as5600_getAngleY(){
-		ESP_LOGI(AS_TAGY,"%f  temp:%f  delta:%f",as5600_angleY,as5600_temp_angleY,as5600_delta_angleY);
+		ESP_LOGI("AS5600 Y","%f  temp:%f  delta:%f",as5600_angleY,as5600_temp_angleY,as5600_delta_angleY);
 		return as5600_angleY;
 }
 float as5600_getAngleYnolog(){

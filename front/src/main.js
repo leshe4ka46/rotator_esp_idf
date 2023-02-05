@@ -7,6 +7,7 @@ import MdiSvg from '@yeliulee/vue-mdi-svg/v2'
 Vue.config.productionTip = false
 
 Vue.prototype.$ajax = axios
+axios.defaults.timeout = 500;
 Vue.use(MdiSvg)
 new Vue({
   render: h => h(App)

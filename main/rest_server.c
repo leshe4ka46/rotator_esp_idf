@@ -83,23 +83,29 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
     	 httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
     	 printf(filter);
     	 printf(" -- yandex fix\r\n");
-    	 return ESP_FAIL;
+    	 return ESP_OK;
+    }
+    if(strcmp(filter,"/www/gene")==0){
+        httpd_resp_set_status(req, "302 Temporary Redirect");
+		httpd_resp_set_hdr(req, "Location", "/");
+		httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);
+        /*
+    	httpd_resp_set_status(req, "302 Temporary Redirect");
+        // Redirect to the "/" root directory
+        httpd_resp_set_hdr(req, "Location", "/");
+        // iOS requires content in the response to detect a captive portal, simply redirecting is not sufficient.
+        httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);*/
+    	 return ESP_OK;
     }
     ESP_LOGI(REST_TAG, "path : %s", filepath);
-    /*if (CHECK_FILE_EXTENSION(filepath,".gz") == 0) {
-    	  httpd_resp_set_hdr(req,"Content-Encoding", "gzip");
-    }*/
     int fd = open(filepath, O_RDONLY, 0);
     if (fd == -1) {
         ESP_LOGE(REST_TAG, "Failed to open file : %s", filepath);
-        //httpd_resp_set_status(req, "302 Temporary Redirect");
-		// Redirect to the "/" root directory
-		//httpd_resp_set_hdr(req, "Location", "/");
-		// iOS requires content in the response to detect a captive portal, simply redirecting is not sufficient.
-		//httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);
-
-		//ESP_LOGI(REST_TAG, "Redirecting to root");
-        /* Respond with 500 Internal Server Error */
+        /*
+        httpd_resp_set_status(req, "302 Temporary Redirect");
+		httpd_resp_set_hdr(req, "Location", "/");
+		httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);
+        */
         httpd_resp_send(req, "<html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title><script>function goto_root(){window.location.href=\"/\"}</script></head><body><center><h1>404 Not Found</h1><button onclick=\"goto_root()\">Go to root</button></center><hr><center>rotator/1.0.1</center></body></html>", HTTPD_RESP_USE_STRLEN);
         return ESP_OK;
     }
@@ -114,22 +120,17 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
         if (read_bytes == -1) {
             ESP_LOGE(REST_TAG, "Failed to read file : %s", filepath);
         } else if (read_bytes > 0) {
-            /* Send the buffer contents as HTTP response chunk */
             if (httpd_resp_send_chunk(req, chunk, read_bytes) != ESP_OK) {
                 close(fd);
                 ESP_LOGE(REST_TAG, "File sending failed!");
-                /* Abort sending file */
                 httpd_resp_sendstr_chunk(req, NULL);
-                /* Respond with 500 Internal Server Error */
                 httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
                 return ESP_FAIL;
             }
         }
     } while (read_bytes > 0);
-    /* Close file after sending complete */
     close(fd);
-    ESP_LOGI(REST_TAG, "File sending complete");
-    /* Respond with an empty chunk to signal HTTP response completion */
+    //ESP_LOGI(REST_TAG, "File sending complete");
     httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
 }
@@ -354,6 +355,35 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t set_dorotate(httpd_req_t *req)
+{
+
+    char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+    ESP_ERROR_CHECK(get_buf_from_request(req,buf));
+    cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"value")){
+        httpd_resp_sendstr(req, "ARGS!");
+        return ESP_FAIL;
+    }
+    const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
+	uint8_t dorotate = cJSON_GetObjectItem(root, "value")->valueint;
+
+
+    if(is_admin(key)==77){
+        do_rotate_set(dorotate);
+    	nvs_handle_t ws = open_nvs("settings", NVS_READWRITE);
+        check_err(nvs_set_u8(ws, "dorotate", dorotate));
+        nvs_commit(ws);
+        nvs_close(ws);
+    	httpd_resp_sendstr(req, "OK");
+    }
+    else{
+    	httpd_resp_sendstr(req, "No");
+    }
+
+    cJSON_Delete(root);
+    return ESP_OK;
+}
 
 
 static esp_err_t adduser(httpd_req_t *req)
@@ -384,6 +414,7 @@ static esp_err_t anglesdatatx(httpd_req_t *req)
 	cJSON_AddNumberToObject(root, "setted_elevation", (float)get_pos(1)/STEPS_PER_ROTATION/STEPPERS_MICROSTEP/STEPPERS_GEAR_RATIO*360+delta_angleY);
     cJSON_AddNumberToObject(root, "is_ready", motor_isready());
     cJSON_AddNumberToObject(root, "delta_enabled", (delta_angleX==0&&delta_angleY==0)?0:1);
+    cJSON_AddNumberToObject(root, "dorotate_enabled", do_rotate_get());
 	const char *sys_info = cJSON_Print(root);
 	httpd_resp_sendstr(req, sys_info);
 	free((void *)sys_info);
@@ -543,7 +574,7 @@ static esp_err_t wifi_mode_set(httpd_req_t *req)
 
     if(is_admin(key)==77){
         set_wifi(mode);
-        set_pr_state(0);
+        //set_pr_state(0);
     	httpd_resp_sendstr(req, "OK");
     }
     else{
@@ -587,6 +618,7 @@ esp_err_t start_rest_server(const char *base_path)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.max_uri_handlers = 16;
+    config.max_open_sockets=13;
     config.lru_purge_enable = true;
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
@@ -668,6 +700,14 @@ esp_err_t start_rest_server(const char *base_path)
 				.user_ctx = rest_context
 			};
     httpd_register_uri_handler(server, &data_set_diffgps_uri);
+
+    httpd_uri_t data_set_dorotate_uri = {
+				.uri = "/api/v1/data/set/dorotate",
+				.method = HTTP_POST,
+				.handler = set_dorotate,
+				.user_ctx = rest_context
+			};
+    httpd_register_uri_handler(server, &data_set_dorotate_uri);
 
     httpd_uri_t data_set_angles_uri = {
 				.uri = "/api/v1/data/set/angles",

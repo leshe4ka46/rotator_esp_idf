@@ -38,7 +38,7 @@ export default {
   methods: {
     send() {
       this.login_loading = true
-      console.log(this.login.length);
+      //console.log(this.login.length);
       if (this.login.length == 0 || this.password.length == 0) {
         if(this.login.length == 0){this.err_input_login=true;}else{this.err_input_login=false;}
         if(this.password.length == 0){this.err_input_password=true;}else{this.err_input_password=false;}
@@ -55,8 +55,6 @@ export default {
           key: localStorage.getItem('rotator_client_id')
         })
         .then(function (data) {
-          // eslint-disable-next-line
-          console.log(data);
           if (data.data.role === 'admin') {
             this.is_admin = true;
             bus.$emit('is_admin', 1)
