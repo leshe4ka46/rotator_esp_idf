@@ -618,7 +618,7 @@ esp_err_t start_rest_server(const char *base_path)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.max_uri_handlers = 16;
-    config.max_open_sockets=13;
+    //config.max_open_sockets=13;
     config.lru_purge_enable = true;
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
@@ -762,7 +762,6 @@ esp_err_t start_rest_server(const char *base_path)
 
 
     init_steppers();
-    //init_i2c(48,47,21,45);//test
     init_i2c(21,45,48,47); //new
     //init_i2c(7,6,19,8);
     start_monitoring_AS5600();

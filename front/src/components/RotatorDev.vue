@@ -1,12 +1,5 @@
 <template>
   <div>
-    <div>
-      <label class="switch" >
-        <input type="checkbox" v-model="dorotate" @click="do_rotate_switch" id="sw1">
-        <span class="slider round"> </span>
-      </label>
-      <label for="sw1" > Доворот до точной остановки</label>
-    </div>
     <v-btn depressed color="error" @click="reset">
       Delete all data
     </v-btn>
