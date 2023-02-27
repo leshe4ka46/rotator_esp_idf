@@ -347,3 +347,5 @@ void do_rotate_set(uint8_t val){
 uint8_t do_rotate_get(){
 	return DO_ROTATE_ENABLED;
 }
+
+
