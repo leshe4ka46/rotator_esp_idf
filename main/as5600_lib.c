@@ -33,7 +33,7 @@ void init_i2c(uint8_t i2c_sdaX_pin,uint8_t i2c_sclX_pin,uint8_t i2c_sdaY_pin,uin
 		.sda_pullup_en = GPIO_PULLUP_ENABLE,
 		.scl_pullup_en = GPIO_PULLUP_ENABLE,
 		.master={
-				.clk_speed = 100000
+				.clk_speed = 400000
 		}
 	};
 	ESP_ERROR_CHECK(i2c_param_config(I2C_X, &confX));
@@ -47,11 +47,12 @@ void init_i2c(uint8_t i2c_sdaX_pin,uint8_t i2c_sclX_pin,uint8_t i2c_sdaY_pin,uin
 		.sda_pullup_en = GPIO_PULLUP_ENABLE,
 		.scl_pullup_en = GPIO_PULLUP_ENABLE,
 		.master={
-				.clk_speed = 100000
+				.clk_speed = 400000
 		}
 	};
 	ESP_ERROR_CHECK(i2c_param_config(I2C_Y, &confY));
 	ESP_ERROR_CHECK(i2c_driver_install(I2C_Y, confY.mode, 0, 0, 0));
+	
 	ESP_LOGI("AS5600", "I2C initialized");
 }
 
@@ -69,7 +70,7 @@ float as5600_get_currentAngle(uint8_t device_addr,i2c_port_t i2c_port)
 	i2c_master_write_byte(cmd, device_addr << 1 | I2C_WRITE_MODE, ACK_CHECK_ENABLE);
 	i2c_master_write_byte(cmd, RawAngle_Addr, ACK_CHECK_ENABLE);
 	i2c_master_stop(cmd);
-	i2c_master_cmd_begin(i2c_port, cmd, pdMS_TO_TICKS(1000));
+	i2c_master_cmd_begin(i2c_port, cmd, pdMS_TO_TICKS(100));
 	i2c_cmd_link_delete(cmd);
 	vTaskDelay(pdMS_TO_TICKS(1));
 
@@ -79,12 +80,11 @@ float as5600_get_currentAngle(uint8_t device_addr,i2c_port_t i2c_port)
 	i2c_master_read_byte(cmd, &angle_high, ACK); // 0x0c is a high level
 	i2c_master_read_byte(cmd, &angle_low, NACK);
 	i2c_master_stop(cmd);
-	i2c_master_cmd_begin(i2c_port, cmd, pdMS_TO_TICKS(1000));
+	i2c_master_cmd_begin(i2c_port, cmd, pdMS_TO_TICKS(100));
 	i2c_cmd_link_delete(cmd);
 
 	result=(uint16_t)(angle_high<<8|angle_low); // A total of 11 points
-	angle=((int) result & 0b0000111111111111)*360.0/4096.0;
-	//ESP_LOGI(AS_TAG,"%.2f",angle);
+	angle=((int) result & 0xFFF)*360.0/4096.0; //0b0000111111111111
 	return angle;
 }
 
@@ -124,7 +124,6 @@ void tickAS5600(void *pvParameter)
 			}
 			as5600_angleX = as5600_temp_angleX + 360 * as5600_turnsX - as5600_delta_angleX;
 			as5600_prevangleX = as5600_temp_angleX;
-
 
 
 			as5600_temp_angleY = as5600_get_currentAngle(as5600_Addr,I2C_Y);

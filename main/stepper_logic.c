@@ -8,7 +8,8 @@
 #include "as5600_lib.c"
 #include "sdkconfig.h"
 #define STEPS_IN360 CONFIG_STEPPER_STEPS_PER_ROTATION*CONFIG_STEPPER_MICROSTEP*CONFIG_STEPPER_GEAR_RATIO/360
-/*
+
+
 #define STEP_MOTOR_GPIO_ENX       4
 #define STEP_MOTOR_GPIO_DIRX      18
 #define STEP_MOTOR_GPIO_STEPX     17
@@ -16,7 +17,7 @@
 #define STEP_MOTOR_GPIO_ENY       5
 #define STEP_MOTOR_GPIO_DIRY      16
 #define STEP_MOTOR_GPIO_STEPY     15
-*/
+
 
 /*
 #define STEP_MOTOR_GPIO_ENX       14
@@ -29,7 +30,7 @@
 */
 
 
-
+/* //board v2.0
 #define STEP_MOTOR_GPIO_ENX       11
 #define STEP_MOTOR_GPIO_DIRX      9
 #define STEP_MOTOR_GPIO_STEPX     10
@@ -37,7 +38,7 @@
 #define STEP_MOTOR_GPIO_ENY       14
 #define STEP_MOTOR_GPIO_DIRY      12
 #define STEP_MOTOR_GPIO_STEPY     13
-
+*/
 
 
 #define STEP_MOTOR_ENABLE_LEVEL  0 // DRV8825 is enabled on low level
@@ -50,14 +51,14 @@
 uint8_t DO_ROTATE_ENABLED;
 
 
-uint32_t accel_samplesx = 3200*4;
+uint32_t accel_samplesx = 3200*2;
 uint32_t uniform_speed_hzx = 15000;
-uint32_t decel_samplesx = 3200*4;
-uint32_t do_rotate_speed_hzx = 10000;
+uint32_t decel_samplesx = 3200*2;
+uint32_t do_rotate_speed_hzx = 1000;
 
-uint32_t accel_samplesy = 3200*4;
+uint32_t accel_samplesy = 3200*2;
 uint32_t uniform_speed_hzy = 15000;
-uint32_t decel_samplesy = 3200*4;
+uint32_t decel_samplesy = 3200*2;
 uint32_t do_rotate_speed_hzy = 10000;
 
 uint8_t delta_stepper_pos=10;
@@ -118,7 +119,7 @@ void stepperX_task(void *pvParameter)
 		if(steps_X!=curr_steps_X){
 			gpio_set_level(STEP_MOTOR_GPIO_DIRX, (steps_X>curr_steps_X)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
 			ESP_LOGI("anglesX","%ld %ld",steps_X,curr_steps_X);
-			if(abs(steps_X-curr_steps_X)<=3200*8){
+			if(abs(steps_X-curr_steps_X)<=3200*4){
 
 				accel_samplesx=abs(steps_X-curr_steps_X)/2;
 				tx_configX.loop_count = 0;
@@ -130,8 +131,8 @@ void stepperX_task(void *pvParameter)
 				motorX_isReady=0;
 			}
 			else{
-				accel_samplesx=3200*4;
-				decel_samplesx=3200*4;
+				accel_samplesx=3200*2;
+				decel_samplesx=3200*2;
 				tx_configX.loop_count = 0;
 				ESP_ERROR_CHECK(rmt_transmit(motor_chan_x, accel_motor_encoderX, &accel_samplesx, sizeof(accel_samplesx), &tx_configX));
 
@@ -218,7 +219,7 @@ void stepperY_task(void *pvParameter)
 		if(steps_Y!=curr_steps_Y){
 			gpio_set_level(STEP_MOTOR_GPIO_DIRY, (steps_Y>curr_steps_Y)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
 			ESP_LOGI("anglesY","%ld %ld",steps_Y,curr_steps_Y);
-			if(abs(steps_Y-curr_steps_Y)<=3200*8){
+			if(abs(steps_Y-curr_steps_Y)<=3200*4){
 
 				accel_samplesy=abs(steps_Y-curr_steps_Y)/2;
 				tx_configY.loop_count = 0;
@@ -228,8 +229,8 @@ void stepperY_task(void *pvParameter)
 				ESP_ERROR_CHECK(rmt_transmit(motor_chan_y, decel_motor_encoderY, &decel_samplesy, sizeof(decel_samplesy), &tx_configY));
 			}
 			else{
-				accel_samplesy=3200*4;
-				decel_samplesy=3200*4;
+				accel_samplesy=3200*2;
+				decel_samplesy=3200*2;
 				tx_configY.loop_count = 0;
 				ESP_ERROR_CHECK(rmt_transmit(motor_chan_y, accel_motor_encoderY, &accel_samplesy, sizeof(accel_samplesy), &tx_configY));
 

@@ -158,7 +158,6 @@ int8_t get_turns()
     nvs_close(ws);
     return 1;
 }
-
 int32_t get_turns_X()
 {
     return turnsX;

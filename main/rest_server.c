@@ -6,8 +6,6 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-
-//#include "as5600_lib.c"
 #include "esp_vfs.h"
 #include <string.h>
 #include <fcntl.h>
@@ -85,7 +83,7 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
     	 printf(" -- yandex fix\r\n");
     	 return ESP_OK;
     }
-    if(strcmp(filter,"/www/gene")==0){
+    if(strcmp(filter,"/www/gene")==0 || strcmp(filter,"/www/gen_")==0){
         httpd_resp_set_status(req, "302 Temporary Redirect");
 		httpd_resp_set_hdr(req, "Location", "/");
 		httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);
@@ -101,11 +99,6 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
     int fd = open(filepath, O_RDONLY, 0);
     if (fd == -1) {
         ESP_LOGE(REST_TAG, "Failed to open file : %s", filepath);
-        /*
-        httpd_resp_set_status(req, "302 Temporary Redirect");
-		httpd_resp_set_hdr(req, "Location", "/");
-		httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);
-        */
         httpd_resp_send(req, "<html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title><script>function goto_root(){window.location.href=\"/\"}</script></head><body><center><h1>404 Not Found</h1><button onclick=\"goto_root()\">Go to root</button></center><hr><center>rotator/1.0.1</center></body></html>", HTTPD_RESP_USE_STRLEN);
         return ESP_OK;
     }
@@ -490,20 +483,6 @@ static esp_err_t clearnvs(httpd_req_t *req)
     cJSON_Delete(root);
     return ESP_OK;
 }
-esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
-{
-    // Set status
-    httpd_resp_set_status(req, "302 Temporary Redirect");
-    // Redirect to the "/" root directory
-    httpd_resp_set_hdr(req, "Location", "/");
-    // iOS requires content in the response to detect a captive portal, simply redirecting is not sufficient.
-    httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);
-
-    ESP_LOGI(REST_TAG, "Redirecting to root");
-    return ESP_OK;
-}
-
-
 
 static esp_err_t reset_as5600(httpd_req_t *req)
 {
@@ -624,7 +603,7 @@ esp_err_t start_rest_server(const char *base_path)
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
     REST_CHECK(httpd_start(&server, &config) == ESP_OK, "Start server failed");
     //ESP_ERROR_CHECK(httpd_start(&server, &config));
-    /* URI handler for fetching system info */
+
     httpd_uri_t system_info_get_uri = {
 				.uri = "/api/v1/system/info",
 				.method = HTTP_GET,
@@ -640,7 +619,6 @@ esp_err_t start_rest_server(const char *base_path)
 				.user_ctx = rest_context
 			};
     httpd_register_uri_handler(server, &users_add_post_uri);
-
 
     httpd_uri_t users_auth_post_uri = {
                 .uri = "/api/v1/users/auth",
@@ -674,8 +652,6 @@ esp_err_t start_rest_server(const char *base_path)
 				.user_ctx = rest_context
             };
     httpd_register_uri_handler(server, &data_angles_post_uri);
-
-
 
     httpd_uri_t data_set_homegps_uri = {
 				.uri = "/api/v1/data/set/homegps",
@@ -750,8 +726,6 @@ esp_err_t start_rest_server(const char *base_path)
 			};
 	httpd_register_uri_handler(server, &data_set_system_restart_uri);
 
-    //httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
-
     httpd_uri_t common_get_uri = {
         .uri = "/*",
         .method = HTTP_GET,
@@ -762,8 +736,8 @@ esp_err_t start_rest_server(const char *base_path)
 
 
     init_steppers();
-    init_i2c(21,45,48,47); //new
-    //init_i2c(7,6,19,8);
+    //init_i2c(21,45,48,47); //new
+    init_i2c(7,6,19,8); //test board
     start_monitoring_AS5600();
     ESP_LOGI("RAD","%.51f",radians(180));
     return ESP_OK;

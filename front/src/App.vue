@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-app id="inspire">
+    <v-app id="inspire" v-if="device==1">
       <v-navigation-drawer v-model="drawer" fixed app clipped>
         <v-list dense v-model="page" rounded>
           <v-list-tile @click="page=0"  >
@@ -40,23 +40,10 @@
         </v-btn>
 
       </v-toolbar>
-
-      <v-dialog v-model="settings_dialog" max-width="85%">
-        <v-card >
-
-          <RotatorSettings style="font-size: 1.2em;"></RotatorSettings>
-
-        </v-card>
-      </v-dialog>
-      <v-dialog v-model="login_dialog" width="800">
-        <v-card>
-          <RotatorAuth style="font-size: 1.5em;"></RotatorAuth>
-        </v-card>
-      </v-dialog>
       <v-content>
           <v-container fill-height center style="font-size: 1.2em;">
             <keep-alive>
-              <RotatorMain v-if="page==0"></RotatorMain>
+              <RotatorMain v-if="page==0" :device="device"></RotatorMain>
             </keep-alive>
             <keep-alive>
               <RotatorDataset v-if="page==1"></RotatorDataset>
@@ -64,6 +51,36 @@
           </v-container>
       </v-content>
     </v-app>
+    <v-app v-if="device==0">
+      <v-toolbar color="red accent-4" dark fixed app clipped-left>
+        <v-toolbar-title>SPORADIC Rotator</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon v-if="is_admin == 0">
+          <div @click.stop="login_dialog = true">
+            <MdiSvg>{{ mdiLoginVariant }}</MdiSvg>
+          </div>
+        </v-btn>
+        <v-btn icon v-if="is_admin == 1">
+          <div @click="settings_dialog = true">
+            <MdiSvg>{{ mdiWrenchCog }}</MdiSvg>
+          </div>
+        </v-btn>
+      </v-toolbar>
+      <v-container fill-height center style="font-size: 1.2em;" >
+            <RotatorMain :device="device"></RotatorMain>
+            <RotatorDataset></RotatorDataset>
+      </v-container>
+    </v-app>
+    <v-dialog v-model="settings_dialog" max-width="85%">
+        <v-card >
+          <RotatorSettings style="font-size: 1.2em;"></RotatorSettings>
+        </v-card>
+      </v-dialog>
+      <v-dialog v-model="login_dialog" width="800">
+        <v-card>
+          <RotatorAuth style="font-size: 1.5em;"></RotatorAuth>
+        </v-card>
+      </v-dialog>
   </div>
 </template>
 
@@ -92,7 +109,8 @@ export default {
       isLoading: true,
       is_admin: false,
       setted_azimut: 0,
-      setted_elevation: 0
+      setted_elevation: 0,
+      device:0  // 0 - pc, 1 - mobile
     }
   },
   watch:{
@@ -138,6 +156,14 @@ export default {
       this.login_dialog = false
       this.settings_dialog = false
     })
+
+    if (window.screen.width<1200){
+      //bus.$emit('device', {'mobile': true})
+      this.device=1
+    }else{
+      this.device=0
+    }
+    //alert(String(window.screen.width)+"  "+String(window.screen.height)+" "+String(this.device))
   },
   mounted() {
     setTimeout(() => {
@@ -171,7 +197,7 @@ export default {
 </script>
 
 <style>
-/*body::-webkit-scrollbar {
+body::-webkit-scrollbar {
   width: 0px;
-}*/
+}
 </style>
