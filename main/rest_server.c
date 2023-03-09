@@ -183,7 +183,7 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"azimut") || !cJSON_HasObjectItem(root,"elevation")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -197,7 +197,7 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 	}
 
 	cJSON_Delete(root);
-    httpd_resp_sendstr(req, "OK");
+    httpd_resp_sendstr(req, "{\"response\":1}");
     return ESP_OK;
 }
 
@@ -219,7 +219,7 @@ static esp_err_t set_gps_diff(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"diff")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -231,7 +231,7 @@ static esp_err_t set_gps_diff(httpd_req_t *req)
 	}
 
 	cJSON_Delete(root);
-    httpd_resp_sendstr(req, "OK");
+    httpd_resp_sendstr(req, "{\"response\":1}");
     return ESP_OK;
 }
 
@@ -277,7 +277,7 @@ static esp_err_t home_set_gps(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"lat") || !cJSON_HasObjectItem(root,"lon") || !cJSON_HasObjectItem(root,"height")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -293,7 +293,7 @@ static esp_err_t home_set_gps(httpd_req_t *req)
 	}
 
 	cJSON_Delete(root);
-    httpd_resp_sendstr(req, "OK");
+    httpd_resp_sendstr(req, "{\"response\":1}");
     return ESP_OK;
 }
 #define PI 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196442881097566593344612847564823378678316527120190914564856692346034861045432664821339360726024914127372458700660631558817488152092096282925409171536436789259036001133053054882046652138414695194151160943305727036575959195309218611738193261179310511854807446237996274956735188575272489122793818301194912983367336244065664308602139494639522473719070217986094370277053921717629317675238467481846766940513200056812714526356082778577134275778960917363717872146844090122495343014654958537105079227968925892354201995611212902196086403441815981362977477130996051870721134999999
@@ -305,7 +305,7 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
 	cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"lat") || !cJSON_HasObjectItem(root,"lon") || !cJSON_HasObjectItem(root,"height")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -323,7 +323,7 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
         sputnic[1]=lon;
         sputnic[2]=height;
 		ESP_LOGI("SAT coords","sputnic: %f %f %f\r\n",lat,lon,height);
-        if (check_gps(prev_sputnic,sputnic,count_packets)==ESP_OK)
+        if (1)//true || check_gps(prev_sputnic,sputnic,count_packets)==ESP_OK)
         {
             gps_ok=1;
             if(receiver[0]!=0){
@@ -344,7 +344,7 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
 	}
 
 	cJSON_Delete(root);
-    httpd_resp_sendstr(req, "OK");
+    httpd_resp_sendstr(req, "{\"response\":1}");
     return ESP_OK;
 }
 
@@ -355,7 +355,7 @@ static esp_err_t set_dorotate(httpd_req_t *req)
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"value")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -368,7 +368,7 @@ static esp_err_t set_dorotate(httpd_req_t *req)
         check_err(nvs_set_u8(ws, "dorotate", dorotate));
         nvs_commit(ws);
         nvs_close(ws);
-    	httpd_resp_sendstr(req, "OK");
+    	httpd_resp_sendstr(req, "{\"response\":1}");
     }
     else{
     	httpd_resp_sendstr(req, "No");
@@ -386,13 +386,13 @@ static esp_err_t adduser(httpd_req_t *req)
 
 	cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
 	const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
     set_user(key,0);
     cJSON_Delete(root);
-    httpd_resp_sendstr(req, "OK");
+    httpd_resp_sendstr(req, "{\"response\":1}");
     return ESP_OK;
 }
 
@@ -420,7 +420,7 @@ static esp_err_t authuser(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"login") || !cJSON_HasObjectItem(root,"password")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -444,7 +444,7 @@ static esp_err_t whoami(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -466,7 +466,7 @@ static esp_err_t clearnvs(httpd_req_t *req)
 	ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -474,7 +474,7 @@ static esp_err_t clearnvs(httpd_req_t *req)
     switch(is_admin(key)){
     case 77:
     	clear_nvs();
-    	httpd_resp_sendstr(req, "OK");
+    	httpd_resp_sendstr(req, "{\"response\":1}");
     	break;
     default:
     	httpd_resp_sendstr(req, "NONONO");
@@ -494,13 +494,13 @@ static esp_err_t reset_as5600(httpd_req_t *req)
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
     if(is_admin(key)==77){
     	reset_all_positions();
-    	httpd_resp_sendstr(req, "OK");
+    	httpd_resp_sendstr(req, "{\"response\":1}");
     }
     else{
     	httpd_resp_sendstr(req, "No");
@@ -516,7 +516,7 @@ static esp_err_t delta_angle(httpd_req_t *req)
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"azimut") || !cJSON_HasObjectItem(root,"elevation")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -528,7 +528,7 @@ static esp_err_t delta_angle(httpd_req_t *req)
     	delta_angleX=azimut;
     	delta_angleY=elevation;
     	printf("newdeltaX:%f %f\r\n",delta_angleX,delta_angleY);
-    	httpd_resp_sendstr(req, "OK");
+    	httpd_resp_sendstr(req, "{\"response\":1}");
     }
     else{
     	httpd_resp_sendstr(req, "No");
@@ -544,7 +544,7 @@ static esp_err_t wifi_mode_set(httpd_req_t *req)
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key") || !cJSON_HasObjectItem(root,"mode")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
@@ -554,7 +554,7 @@ static esp_err_t wifi_mode_set(httpd_req_t *req)
     if(is_admin(key)==77){
         set_wifi(mode);
         //set_pr_state(0);
-    	httpd_resp_sendstr(req, "OK");
+    	httpd_resp_sendstr(req, "{\"response\":1}");
     }
     else{
     	httpd_resp_sendstr(req, "No");
@@ -571,13 +571,13 @@ static esp_err_t restart_esp(httpd_req_t *req)
     ESP_ERROR_CHECK(get_buf_from_request(req,buf));
     cJSON *root = cJSON_Parse(buf);
     if (!cJSON_HasObjectItem(root,"key")){
-        httpd_resp_sendstr(req, "ARGS!");
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
         return ESP_FAIL;
     }
     const char * key = cJSON_GetObjectItem(root, "key")->valuestring;
     if(is_admin(key)==77){
         esp_restart();
-    	httpd_resp_sendstr(req, "OK");
+    	httpd_resp_sendstr(req, "{\"response\":1}");
     }
     else{
     	httpd_resp_sendstr(req, "No");

@@ -4,7 +4,10 @@
     "idf.port": "/dev/ttyUSB0",
     "files.associations": {
         "sdkconfig.h": "c",
-        "netbiosns.h": "c"
+        "netbiosns.h": "c",
+        "*.ipp": "c",
+        "*.tcc": "c"
     },
     "C_Cpp.errorSquiggles": "enabled",
+    "cmake.configureOnOpen": false,
 }
