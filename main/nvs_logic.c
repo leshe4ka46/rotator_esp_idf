@@ -21,6 +21,7 @@ void check_err(esp_err_t err){
         printf("Error (%s) reading!\n", esp_err_to_name(err));
     }
 }
+uint8_t curr_err=0;
 nvs_handle_t open_nvs(const char* namespace,nvs_open_mode_t mode){
     nvs_handle_t ws;
     esp_err_t err;
@@ -28,9 +29,14 @@ nvs_handle_t open_nvs(const char* namespace,nvs_open_mode_t mode){
     if (err != ESP_OK)
     {
         printf("Error (%s) opening NVS!\n", esp_err_to_name(err));
+        curr_err=1;
+    }
+    else{
+        curr_err=0;
     }
     return ws;
 }
+
 esp_err_t init_nvs(void)
 {
 	esp_err_t err = nvs_flash_init();
@@ -128,6 +134,9 @@ int8_t get_wifi()
 {
     int8_t value;
     nvs_handle_t ws = open_nvs("wifi_settings", NVS_READONLY);
+    if(curr_err){
+        set_wifi(0);
+    }
     check_err(nvs_get_i8(ws, "mode", &value));
     nvs_close(ws);
     return value;
@@ -153,6 +162,9 @@ int32_t turnsX,turnsY;
 int8_t get_turns()
 {
     nvs_handle_t ws = open_nvs("turns", NVS_READONLY);
+    if(curr_err){
+        set_turns(0,0);
+    }
     check_err(nvs_get_i32(ws, "x", &turnsX));
     check_err(nvs_get_i32(ws, "y", &turnsY));
     nvs_close(ws);
@@ -183,6 +195,9 @@ int32_t deltaX,deltaY;
 int8_t get_delta()
 {
     nvs_handle_t ws = open_nvs("delta", NVS_READONLY);
+    if(curr_err){
+        set_delta(0,0);
+    }
     check_err(nvs_get_i32(ws, "x", &deltaX));
     check_err(nvs_get_i32(ws, "y", &deltaY));
     nvs_close(ws);
@@ -219,6 +234,9 @@ int32_t get_target(uint8_t uid)
 {
     int32_t val;
     nvs_handle_t ws = open_nvs("target", NVS_READONLY);
+    if(curr_err){
+        set_target(0,0);
+    }
     if(uid==0){
         check_err(nvs_get_i32(ws, "x", &val));
     }

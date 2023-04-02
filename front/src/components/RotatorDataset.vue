@@ -1,7 +1,7 @@
 <template>
-  <div>
-      <v-layout text-xs-center wrap>
-        <v-card max-width="300px" flat class="bcg">
+  <div class="container">
+      <v-layout text-xs-center >
+        <v-card flat >
           <v-container>
             <p class="text-center ">Углы</p>
             <v-text-field label="Азимут" v-model="azimut" type="number" @keyup.enter.exact="sendangles" />
@@ -13,8 +13,7 @@
             </v-btn>
           </v-card-actions>
         </v-card>
-        <div class="d-inline pa-2 bcg">
-        </div>
+        <br>
         <v-card max-width="300px" flat class="bcg">
           <p class="text-center ">Координаты спутника</p>
           <v-container>
@@ -28,8 +27,7 @@
             </v-btn>
           </v-card-actions>
         </v-card>
-        <div class="d-inline pa-2 bcg">
-        </div>
+        <br>
         <v-card max-width="300px" flat class="bcg">
           <p class="text-center ">
             Координаты поворотки
@@ -131,9 +129,3 @@ export default {
   }
 }
 </script>
-
-<style>
-.bcg{
-  background-color:#fafafa !important
-}
-</style>

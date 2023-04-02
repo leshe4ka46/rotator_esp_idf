@@ -1,7 +1,7 @@
 <template>
   <div>
-    <v-app id="inspire" v-if="device==1">
-      <v-navigation-drawer v-model="drawer" fixed app clipped>
+    <v-app id="inspire">
+      <v-navigation-drawer v-model="drawer" fixed app clipped v-if="device==1">
         <v-list dense v-model="page" rounded>
           <v-list-tile @click="page=0"  >
             <v-list-tile-action>
@@ -23,53 +23,33 @@
         </v-list>
       </v-navigation-drawer>
       <v-toolbar color="red accent-4" dark fixed app clipped-left>
-        <v-toolbar-side-icon @click.stop="open_drawer">
+        <v-toolbar-side-icon @click.stop="open_drawer" v-if="device==1">
           <MdiSvg>{{ mdiMenu }}</MdiSvg>
         </v-toolbar-side-icon>
-        <v-toolbar-title>SPORADIC Rotator</v-toolbar-title>
+        <v-toolbar-title>Sporadic rotator</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn icon v-if="is_admin == 0">
-          <div @click.stop="login_dialog = true">
+        <v-btn icon v-if="is_admin == 0" @click.stop="login_dialog = true">
             <MdiSvg>{{ mdiLoginVariant }}</MdiSvg>
-          </div>
         </v-btn>
-        <v-btn icon v-if="is_admin == 1">
-          <div @click="settings_dialog = true">
+        <v-btn icon v-if="is_admin == 1" @click="settings_dialog = true">
             <MdiSvg>{{ mdiWrenchCog }}</MdiSvg>
-          </div>
         </v-btn>
 
       </v-toolbar>
       <v-content>
-          <v-container fill-height center style="font-size: 1.2em;">
+          <v-container fill-height center style="font-size: 1.2em;" v-if="device==1">
             <keep-alive>
-              <RotatorMain v-if="page==0" :device="device"></RotatorMain>
+              <RotatorMain v-if="page==0"></RotatorMain>
             </keep-alive>
             <keep-alive>
               <RotatorDataset v-if="page==1"></RotatorDataset>
             </keep-alive>
           </v-container>
-      </v-content>
-    </v-app>
-    <v-app v-if="device==0">
-      <v-toolbar color="red accent-4" dark fixed app clipped-left>
-        <v-toolbar-title>SPORADIC Rotator</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-btn icon v-if="is_admin == 0">
-          <div @click.stop="login_dialog = true">
-            <MdiSvg>{{ mdiLoginVariant }}</MdiSvg>
-          </div>
-        </v-btn>
-        <v-btn icon v-if="is_admin == 1">
-          <div @click="settings_dialog = true">
-            <MdiSvg>{{ mdiWrenchCog }}</MdiSvg>
-          </div>
-        </v-btn>
-      </v-toolbar>
-      <v-container fill-height center style="font-size: 1.2em;" >
-            <RotatorMain :device="device"></RotatorMain>
+          <v-container fill-height center style="font-size: 1.2em;" v-if="device==0">
+            <RotatorMain></RotatorMain>
             <RotatorDataset></RotatorDataset>
       </v-container>
+      </v-content>
     </v-app>
     <v-dialog v-model="settings_dialog" max-width="85%">
         <v-card >
@@ -106,11 +86,10 @@ export default {
       login_dialog: false,
       drawer: false,
       settings_dialog: false,
-      isLoading: true,
       is_admin: false,
       setted_azimut: 0,
       setted_elevation: 0,
-      device:0  // 0 - pc, 1 - mobile
+      device:0   // 0 - pc, 1 - mobile
     }
   },
   watch:{
@@ -156,24 +135,23 @@ export default {
       this.login_dialog = false
       this.settings_dialog = false
     })
-
-    if (window.screen.width<1200){
-      //bus.$emit('device', {'mobile': true})
-      this.device=1
-    }else{
-      this.device=0
-    }
-    //alert(String(window.screen.width)+"  "+String(window.screen.height)+" "+String(this.device))
-  },
-  mounted() {
-    setTimeout(() => {
-      this.isLoading = false
-    }, 100)
+    this.set_device()
+    setInterval(()=>{
+      this.set_device()
+    },2500)
   },
   components: {
     RotatorAuth, RotatorSettings,RotatorDataset,RotatorMain
   },
   methods: {
+    set_device(){
+      if (window.outerWidth<1300){
+        //bus.$emit('device', {'mobile': true})
+        this.device=1
+      }else{
+        this.device=0
+      }
+    },
     open_drawer() {
       if (this.is_admin == true) {
         this.drawer = !this.drawer

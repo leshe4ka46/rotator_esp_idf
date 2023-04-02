@@ -25,20 +25,11 @@ menu "Example Configuration"
             WiFi channel (network channel).
 
     config ESP_MAX_CONN
-        int "Maximal connections"
+        int "Maxmum clients"
         range 1 10
         default 4
         help
             Max number of connected devices.
-
-    config EXAMPLE_PROV_MGR_MAX_RETRY_CNT
-        int
-        default 5
-        prompt "Max retries before reseting provisioning state machine"
-        help
-            Set the Maximum retry to avoid reconnecting to an inexistent AP or if credentials
-            are misconfigured. Provisioned credentials are erased and internal state machine
-            is reset after this threshold is reached.
 
     config STEPPER_STEPS_PER_ROTATION
         int "Steps per one rotation with no microstep"

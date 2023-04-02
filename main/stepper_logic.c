@@ -20,7 +20,7 @@
 #define STEP_MOTOR_GPIO_STEPY     15
 */
 
-/*
+//board v1.0
 #define STEP_MOTOR_GPIO_ENX       14
 #define STEP_MOTOR_GPIO_DIRX      12
 #define STEP_MOTOR_GPIO_STEPX     13
@@ -28,10 +28,9 @@
 #define STEP_MOTOR_GPIO_ENY       11
 #define STEP_MOTOR_GPIO_DIRY      9
 #define STEP_MOTOR_GPIO_STEPY     10
-*/
 
 
-/* //board v2.0
+/*
 #define STEP_MOTOR_GPIO_ENX       11
 #define STEP_MOTOR_GPIO_DIRX      9
 #define STEP_MOTOR_GPIO_STEPX     10
@@ -41,14 +40,14 @@
 #define STEP_MOTOR_GPIO_STEPY     13
 */
 
- //test uart
+/* //test uart
 #define STEP_MOTOR_GPIO_ENX       5
 #define STEP_MOTOR_GPIO_DIRX      16
 #define STEP_MOTOR_GPIO_STEPX     15
 
 #define STEP_MOTOR_GPIO_ENY       14
 #define STEP_MOTOR_GPIO_DIRY      12
-#define STEP_MOTOR_GPIO_STEPY     13
+#define STEP_MOTOR_GPIO_STEPY     13*/
 
 
 
@@ -274,7 +273,7 @@ void stepperY_task(void *pvParameter)
 }
 
 esp_err_t init_steppers(){
-	init_tmc2208s(4,18);
+	//init_tmc2208s(4,18,0,0);
     nvs_handle_t ws = open_nvs("settings", NVS_READONLY);
     check_err(nvs_get_u8(ws, "dorotate", &DO_ROTATE_ENABLED));
     nvs_close(ws);

@@ -128,6 +128,10 @@ void app_main(void)
         set_wifi(0);
         esp_restart();
     }
+    else{
+        set_wifi(0);
+        esp_restart();
+    }
     //start_dns_server();
     ESP_ERROR_CHECK(init_fs());
     ESP_ERROR_CHECK(start_rest_server(CONFIG_WEB_MOUNT_POINT));

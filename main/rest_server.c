@@ -169,7 +169,7 @@ static esp_err_t system_info_get_handler(httpd_req_t *req)
 }
 //------------------------------STEPPER----------
 
-
+#define TEMP_GEAR_RATIO 80
 float delta_angleX=0,delta_angleY=0;
 #define STEPS_PER_ROTATION CONFIG_STEPPER_STEPS_PER_ROTATION
 #define STEPPERS_MICROSTEP CONFIG_STEPPER_MICROSTEP
@@ -330,8 +330,8 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
 
                 aiming(radians(receiver[0]), radians(receiver[1]), receiver[2], radians(sputnic[0]), radians(sputnic[1]), sputnic[2], &angle[0], &angle[1]);
                 ESP_LOGI("CALC GPS","%f %f",angle[0], angle[1]);
-                absolute_stepper(0,angle_to_steps(angle[0]-delta_angleX));
-                absolute_stepper(1,angle_to_steps(angle[1]-delta_angleY));
+                absolute_stepper(0,angle_to_steps(angle[0]-delta_angleX)*TEMP_GEAR_RATIO);
+                absolute_stepper(1,angle_to_steps(angle[1]-delta_angleY)*TEMP_GEAR_RATIO);
             }
         }
         else{
@@ -736,8 +736,8 @@ esp_err_t start_rest_server(const char *base_path)
 
 
     init_steppers();
-    //init_i2c(21,45,48,47); //new
-    init_i2c(7,6,19,8); //test board
+    init_i2c(21,47,48,45); //new
+    //init_i2c(7,6,19,8); //test board
     start_monitoring_AS5600();
     ESP_LOGI("RAD","%.51f",radians(180));
     return ESP_OK;

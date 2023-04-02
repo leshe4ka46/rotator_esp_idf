@@ -40,7 +40,9 @@
     </div>
     <v-btn tile color="success" @click="save_wireless_mode">Сохранить</v-btn>
     <br>-->
-
+    <p>
+      <a class="overflow-auto" href="app.apk" v-if="w_ow<1300">Скачать (Android)</a>
+    </p>
 
     <v-snackbar
       v-model="snackbar"
@@ -62,9 +64,11 @@ export default {
       data:[{name:"AP",value:0},{name:"STA",value:1}],
       val:0,
       dorotate:true,
+      w_ow:0
     }
   },
   created() {
+    this.w_ow =window.outerWidth
     bus.$on('dorotate_enabled',(val)=>{this.dorotate=(val==1)?true:false})
   },
   methods: {

@@ -60,7 +60,6 @@ export default {
       no_eth:0
     }
   },
-  props:['device'],
   watch:{
     is_ready(val){
       bus.$emit('is_ready',val)
@@ -78,10 +77,12 @@ export default {
         this.is_ready=response.data.is_ready;
         this.dorotate_enabled=response.data.dorotate_enabled;
         bus.$emit('dorotate_enabled',this.dorotate_enabled)
+        this.no_eth=false;
         this.check_angles();
-      }).catch(error => { // eslint-disable-next-line
-            console.log(error);
-          });
+    }).catch(error => { // eslint-disable-next-line
+        console.log(error);
+        this.no_eth=true;
+      });
     }, 1000);
   },
 
