@@ -3,8 +3,8 @@
     "version": "0.4.2",
     "private": true,
     "scripts": {
-        "serve": "vue-cli-service serve",
-        "build": "vue-cli-service build && npm run gzip",
+        "serve": "export NODE_ENV=development && vue-cli-service serve",
+        "build": "export NODE_ENV=release && vue-cli-service build && npm run gzip",
         "lint": "vue-cli-service lint",
         "fix": "eslint ./src/* --fix  && npm run fix2",
         "fix2": "eslint ./src/components/* --fix",

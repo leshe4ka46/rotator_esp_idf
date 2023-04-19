@@ -51,7 +51,7 @@
       </v-container>
       </v-content>
     </v-app>
-    <v-dialog v-model="settings_dialog" max-width="85%">
+    <v-dialog v-model="settings_dialog" max-width="650px">
         <v-card >
           <RotatorSettings style="font-size: 1.2em;"></RotatorSettings>
         </v-card>

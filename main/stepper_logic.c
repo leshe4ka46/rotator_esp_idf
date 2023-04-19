@@ -7,8 +7,8 @@
 #include "stepper_motor_encoder.h"
 #include "as5600_lib.c"
 #include "sdkconfig.h"
-#include "stepper_uart.c"
-#define STEPS_IN360 CONFIG_STEPPER_STEPS_PER_ROTATION*CONFIG_STEPPER_MICROSTEP*CONFIG_STEPPER_GEAR_RATIO/360
+//#include "stepper_uart.c"
+#define STEPS_IN360 CONFIG_STEPPER_STEPS_PER_ROTATION*CONFIG_STEPPER_MICROSTEP/360
 
 /*
 #define STEP_MOTOR_GPIO_ENX       4

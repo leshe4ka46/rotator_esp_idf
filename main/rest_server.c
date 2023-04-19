@@ -169,13 +169,12 @@ static esp_err_t system_info_get_handler(httpd_req_t *req)
 }
 //------------------------------STEPPER----------
 
-#define TEMP_GEAR_RATIO 80
 float delta_angleX=0,delta_angleY=0;
 #define STEPS_PER_ROTATION CONFIG_STEPPER_STEPS_PER_ROTATION
 #define STEPPERS_MICROSTEP CONFIG_STEPPER_MICROSTEP
 #define STEPPERS_GEAR_RATIO CONFIG_STEPPER_GEAR_RATIO
 int32_t angle_to_steps(float angle) {
-  return angle * STEPS_PER_ROTATION * STEPPERS_MICROSTEP * STEPPERS_GEAR_RATIO / 360;
+  return angle * STEPS_PER_ROTATION * STEPPERS_MICROSTEP / 360;
 }
 static esp_err_t rotate_angle(httpd_req_t *req)
 {
@@ -191,8 +190,8 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 	double elevation = cJSON_GetObjectItem(root, "elevation")->valuedouble;
 
 	if(is_admin(key)==77){
-		absolute_stepper(0,angle_to_steps(azimut-delta_angleX));
-		absolute_stepper(1,angle_to_steps(elevation-delta_angleY));
+		absolute_stepper(0,angle_to_steps(azimut-delta_angleX)*STEPPERS_GEAR_RATIO);
+		absolute_stepper(1,angle_to_steps(elevation-delta_angleY)*STEPPERS_GEAR_RATIO);
 		printf("angles: %f %f \r\n",azimut,elevation);
 	}
 
@@ -330,8 +329,8 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
 
                 aiming(radians(receiver[0]), radians(receiver[1]), receiver[2], radians(sputnic[0]), radians(sputnic[1]), sputnic[2], &angle[0], &angle[1]);
                 ESP_LOGI("CALC GPS","%f %f",angle[0], angle[1]);
-                absolute_stepper(0,angle_to_steps(angle[0]-delta_angleX)*TEMP_GEAR_RATIO);
-                absolute_stepper(1,angle_to_steps(angle[1]-delta_angleY)*TEMP_GEAR_RATIO);
+                absolute_stepper(0,angle_to_steps(angle[0]-delta_angleX)*STEPPERS_GEAR_RATIO);
+                absolute_stepper(1,angle_to_steps(angle[1]-delta_angleY)*STEPPERS_GEAR_RATIO);
             }
         }
         else{
@@ -400,11 +399,11 @@ static esp_err_t anglesdatatx(httpd_req_t *req)
 {
 	 httpd_resp_set_type(req, "application/json");
 	cJSON *root = cJSON_CreateObject();
-	cJSON_AddNumberToObject(root, "azimut", as5600_getAngleX()+delta_angleX);
-	cJSON_AddNumberToObject(root, "elevation", as5600_getAngleY()+delta_angleY);
+	cJSON_AddNumberToObject(root, "azimut", (as5600_getAngleX()+delta_angleX)/STEPPERS_GEAR_RATIO);
+	cJSON_AddNumberToObject(root, "elevation", (as5600_getAngleY()+delta_angleY)/STEPPERS_GEAR_RATIO);
 	cJSON_AddNumberToObject(root, "voltage", 0.00);
-	cJSON_AddNumberToObject(root, "setted_azimut", (float)get_pos(0)/STEPS_PER_ROTATION/STEPPERS_MICROSTEP/STEPPERS_GEAR_RATIO*360+delta_angleX);
-	cJSON_AddNumberToObject(root, "setted_elevation", (float)get_pos(1)/STEPS_PER_ROTATION/STEPPERS_MICROSTEP/STEPPERS_GEAR_RATIO*360+delta_angleY);
+	cJSON_AddNumberToObject(root, "setted_azimut", ((float)get_pos(0)/STEPS_PER_ROTATION/STEPPERS_MICROSTEP/STEPPERS_GEAR_RATIO*360+delta_angleX)/STEPPERS_GEAR_RATIO);
+	cJSON_AddNumberToObject(root, "setted_elevation", ((float)get_pos(1)/STEPS_PER_ROTATION/STEPPERS_MICROSTEP/STEPPERS_GEAR_RATIO*360+delta_angleY)/STEPPERS_GEAR_RATIO);
     cJSON_AddNumberToObject(root, "is_ready", motor_isready());
     cJSON_AddNumberToObject(root, "delta_enabled", (delta_angleX==0&&delta_angleY==0)?0:1);
     cJSON_AddNumberToObject(root, "dorotate_enabled", do_rotate_get());
@@ -428,14 +427,13 @@ static esp_err_t authuser(httpd_req_t *req)
     const char * password = cJSON_GetObjectItem(root, "password")->valuestring;
 
     if((strcmp("admin",login)+strcmp("admin",password))==0){
-        	set_user(key,77);
-        	httpd_resp_sendstr(req, "{\"role\":\"admin\"}");
-        }
-        else{
-        	httpd_resp_sendstr(req, "{\"role\":\"user\"}");
-        }
+        set_user(key,77);
+        httpd_resp_sendstr(req, "{\"role\":\"admin\"}");
+    }
+    else{
+        httpd_resp_sendstr(req, "{\"role\":\"user\"}");
+    }
     cJSON_Delete(root);
-
     return ESP_OK;
 }
 static esp_err_t whoami(httpd_req_t *req)

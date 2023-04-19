@@ -41,7 +41,7 @@
     <v-btn tile color="success" @click="save_wireless_mode">Сохранить</v-btn>
     <br>-->
     <p>
-      <a class="overflow-auto" href="app.apk" v-if="w_ow<1300">Скачать (Android)</a>
+      <a class="overflow-auto" href="RotatorApp.apk" v-if="w_ow<1300">Скачать (Android)</a>
     </p>
 
     <v-snackbar
