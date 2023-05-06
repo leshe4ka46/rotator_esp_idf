@@ -16,7 +16,7 @@
 
 #define I2C_X              I2C_NUM_0
 #define I2C_Y              I2C_NUM_1
-uint8_t as5600_Addr=0x36;
+#define AS5600_ADDR   0x36
 #define RawAngle_Addr 0x0C
 #define I2C_WRITE_MODE      0
 #define I2C_READ_MODE       1
@@ -52,7 +52,7 @@ void init_i2c(uint8_t i2c_sdaX_pin,uint8_t i2c_sclX_pin,uint8_t i2c_sdaY_pin,uin
 	};
 	ESP_ERROR_CHECK(i2c_param_config(I2C_Y, &confY));
 	ESP_ERROR_CHECK(i2c_driver_install(I2C_Y, confY.mode, 0, 0, 0));
-	
+
 	ESP_LOGI("AS5600", "I2C initialized");
 }
 
@@ -77,71 +77,71 @@ float as5600_get_currentAngle(uint8_t device_addr,i2c_port_t i2c_port)
 	cmd = i2c_cmd_link_create();
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, device_addr << 1 | I2C_READ_MODE, ACK_CHECK_ENABLE);
-	i2c_master_read_byte(cmd, &angle_high, ACK); // 0x0c is a high level
+	i2c_master_read_byte(cmd, &angle_high, ACK);
 	i2c_master_read_byte(cmd, &angle_low, NACK);
 	i2c_master_stop(cmd);
 	i2c_master_cmd_begin(i2c_port, cmd, pdMS_TO_TICKS(100));
 	i2c_cmd_link_delete(cmd);
 
-	result=(uint16_t)(angle_high<<8|angle_low); // A total of 11 points
-	angle=((int) result & 0xFFF)*360.0/4096.0; //0b0000111111111111
+	result=(uint16_t)(angle_high<<8|angle_low);
+	angle=((int) result & 0xFFF)*360.0/4096.0;
 	return angle;
 }
 
 
-float as5600_angleX=0,as5600_prevangleX=0,as5600_delta_angleX=0,as5600_temp_angleX=0;
-int32_t as5600_turnsX=0;
+float as5600_angleX=0,prevangleX=0,delta_angleX=0,temp_angleX=0;
+int32_t turnsX=0;
 
-float as5600_angleY=0,as5600_prevangleY=0,as5600_delta_angleY=0,as5600_temp_angleY=0;
-int32_t as5600_turnsY=0;
+float as5600_angleY=0,prevangleY=0,delta_angleY=0,temp_angleY=0;
+int32_t turnsY=0;
 uint8_t upd_turns=0;
 void tickAS5600(void *pvParameter)
 {
 	get_turns();
-	as5600_turnsX=get_turns_X();
-	as5600_turnsY=get_turns_Y();
+	turnsX=get_turns_X();
+	turnsY=get_turns_Y();
 
 	get_delta();
-	as5600_prevangleX=as5600_get_currentAngle(as5600_Addr,I2C_X);
-	as5600_angleX=as5600_prevangleX;
-	as5600_delta_angleX=get_delta_X();//=as5600_angleX;
+	prevangleX=as5600_get_currentAngle(AS5600_ADDR,I2C_X);
+	as5600_angleX=prevangleX;
+	delta_angleX=get_delta_X();//=as5600_angleX;
 
-	as5600_prevangleY=as5600_get_currentAngle(as5600_Addr,I2C_Y);
-	as5600_angleY=as5600_prevangleY;
-	as5600_delta_angleY=get_delta_Y();//=as5600_angleY;
+	prevangleY=as5600_get_currentAngle(AS5600_ADDR,I2C_Y);
+	as5600_angleY=prevangleY;
+	delta_angleY=get_delta_Y();//=as5600_angleY;
 	while(1)
 	  {
-		  	as5600_temp_angleX = as5600_get_currentAngle(as5600_Addr,I2C_X);
-			if (as5600_temp_angleX - as5600_prevangleX > 180 && as5600_prevangleX < 180)
+		  	temp_angleX = as5600_get_currentAngle(AS5600_ADDR,I2C_X);
+			if (temp_angleX - prevangleX > 180 && prevangleX < 180)
 			{
-				as5600_turnsX -= 1;
+				turnsX -= 1;
 				upd_turns=1;
 			}
-			if (as5600_temp_angleX - as5600_prevangleX < -180 && as5600_prevangleX > 180)
+			if (temp_angleX - prevangleX < -180 && prevangleX > 180)
 			{
-				as5600_turnsX += 1;
+				turnsX += 1;
 				upd_turns=1;
 			}
-			as5600_angleX = as5600_temp_angleX + 360 * as5600_turnsX - as5600_delta_angleX;
-			as5600_prevangleX = as5600_temp_angleX;
+			as5600_angleX = temp_angleX + 360 * turnsX - delta_angleX;
+			prevangleX = temp_angleX;
 
 
-			as5600_temp_angleY = as5600_get_currentAngle(as5600_Addr,I2C_Y);
-			if (as5600_temp_angleY - as5600_prevangleY > 180 && as5600_prevangleY < 180)
+			temp_angleY = as5600_get_currentAngle(AS5600_ADDR,I2C_Y);
+			if (temp_angleY - prevangleY > 180 && prevangleY < 180)
 			{
-				as5600_turnsY -= 1;
+				turnsY -= 1;
 				upd_turns=1;
 			}
-			if (as5600_temp_angleY - as5600_prevangleY < -180 && as5600_prevangleY > 180)
+			if (temp_angleY - prevangleY < -180 && prevangleY > 180)
 			{
-				as5600_turnsY += 1;
+				turnsY += 1;
 				upd_turns=1;
 			}
-			as5600_angleY = as5600_temp_angleY + 360 * as5600_turnsY - as5600_delta_angleY;
-			as5600_prevangleY = as5600_temp_angleY;
+			as5600_angleY = temp_angleY + 360 * turnsY - delta_angleY;
+			prevangleY = temp_angleY;
 
 			if(upd_turns==1){
-				set_turns(as5600_turnsX,as5600_turnsY);
+				set_turns(turnsX,turnsY);
 				upd_turns=0;
 			}
 			vTaskDelay(pdMS_TO_TICKS(5));
@@ -154,10 +154,10 @@ void start_monitoring_AS5600(){
 
 void set_zero_as5600(){
 	set_turns(0,0);
-	as5600_turnsX=as5600_turnsY=0;
-	set_delta(as5600_temp_angleX,as5600_temp_angleY);
-	as5600_delta_angleX=as5600_temp_angleX;
-	as5600_delta_angleY=as5600_temp_angleY;
+	turnsX=turnsY=0;
+	set_delta(temp_angleX,temp_angleY);
+	delta_angleX=temp_angleX;
+	delta_angleY=temp_angleY;
 	upd_turns=1;
 }
 
@@ -166,14 +166,14 @@ void set_zero_as5600(){
 
 
 float as5600_getAngleX(){
-		ESP_LOGI("AS5600 X","%f  temp:%f  delta:%f",as5600_angleX,as5600_temp_angleX,as5600_delta_angleX);
+		ESP_LOGI("AS5600 X","%f  temp:%f  delta:%f",as5600_angleX,temp_angleX,delta_angleX);
 		return as5600_angleX;
 }
 float as5600_getAngleXnolog(){
 		return as5600_angleX;
 }
 float as5600_getAngleY(){
-		ESP_LOGI("AS5600 Y","%f  temp:%f  delta:%f",as5600_angleY,as5600_temp_angleY,as5600_delta_angleY);
+		ESP_LOGI("AS5600 Y","%f  temp:%f  delta:%f",as5600_angleY,temp_angleY,delta_angleY);
 		return as5600_angleY;
 }
 float as5600_getAngleYnolog(){

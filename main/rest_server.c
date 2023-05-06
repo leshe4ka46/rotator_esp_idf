@@ -174,7 +174,7 @@ float delta_angleX=0,delta_angleY=0;
 #define STEPPERS_MICROSTEP CONFIG_STEPPER_MICROSTEP
 #define STEPPERS_GEAR_RATIO CONFIG_STEPPER_GEAR_RATIO
 int32_t angle_to_steps(float angle) {
-  return angle * STEPS_PER_ROTATION * STEPPERS_MICROSTEP / 360;
+  return angle * STEPS_PER_ROTATION * STEPPERS_MICROSTEP * STEPPERS_GEAR_RATIO/ 360;
 }
 static esp_err_t rotate_angle(httpd_req_t *req)
 {
@@ -190,8 +190,8 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 	double elevation = cJSON_GetObjectItem(root, "elevation")->valuedouble;
 
 	if(is_admin(key)==77){
-		absolute_stepper(0,angle_to_steps(azimut-delta_angleX)*STEPPERS_GEAR_RATIO);
-		absolute_stepper(1,angle_to_steps(elevation-delta_angleY)*STEPPERS_GEAR_RATIO);
+		absolute_stepper(0,angle_to_steps(azimut-delta_angleX));
+		absolute_stepper(1,angle_to_steps(elevation-delta_angleY));
 		printf("angles: %f %f \r\n",azimut,elevation);
 	}
 
@@ -322,15 +322,15 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
         sputnic[1]=lon;
         sputnic[2]=height;
 		ESP_LOGI("SAT coords","sputnic: %f %f %f\r\n",lat,lon,height);
-        if (1)//true || check_gps(prev_sputnic,sputnic,count_packets)==ESP_OK)
+        if (true || check_gps(prev_sputnic,sputnic,count_packets)==ESP_OK)
         {
             gps_ok=1;
-            if(receiver[0]!=0){
+            if(receiver[0]!=0 && receiver[1]!=0 && receiver[2]!=0){
 
                 aiming(radians(receiver[0]), radians(receiver[1]), receiver[2], radians(sputnic[0]), radians(sputnic[1]), sputnic[2], &angle[0], &angle[1]);
                 ESP_LOGI("CALC GPS","%f %f",angle[0], angle[1]);
-                absolute_stepper(0,angle_to_steps(angle[0]-delta_angleX)*STEPPERS_GEAR_RATIO);
-                absolute_stepper(1,angle_to_steps(angle[1]-delta_angleY)*STEPPERS_GEAR_RATIO);
+                absolute_stepper(0,angle_to_steps(angle[0]-delta_angleX));
+                absolute_stepper(1,angle_to_steps(angle[1]-delta_angleY));
             }
         }
         else{
