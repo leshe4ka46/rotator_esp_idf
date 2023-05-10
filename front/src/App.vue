@@ -22,11 +22,11 @@
           </v-list-tile>
         </v-list>
       </v-navigation-drawer>
-      <v-toolbar color="red accent-4" dark fixed app clipped-left>
+      <v-toolbar color="#0091EA" dark fixed app clipped-left>
         <v-toolbar-side-icon @click.stop="open_drawer" v-if="device==1">
           <MdiSvg>{{ mdiMenu }}</MdiSvg>
         </v-toolbar-side-icon>
-        <v-toolbar-title>Sporadic rotator</v-toolbar-title>
+        <v-toolbar-title>SPORADIC Rotator</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon v-if="is_admin == 0" @click.stop="login_dialog = true">
             <MdiSvg>{{ mdiLoginVariant }}</MdiSvg>

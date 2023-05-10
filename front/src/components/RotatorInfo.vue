@@ -1,12 +1,9 @@
 <template>
-  <v-container>
+  <v-container width="100%">
     <v-layout text-xs-center wrap>
       <v-flex xs12 sm6 offset-sm3>
-        <v-card>
-
-          <v-card-title primary-title >
             <div class="ma-auto">
-              <span class="grey--text" @click="dev_mode+=1">Версия IDF: {{ version }}</span>
+              <span class="grey--text" @click="dev_mode += 1">Версия IDF: {{ version }}</span>
               <br>
               <span class="grey--text">Ядер ESP32: {{ cores }}</span>
               <br>
@@ -17,9 +14,7 @@
               <v-btn tile color="warning" @click="restart_esp">Перезагрузить esp
               </v-btn>
             </div>
-
-          </v-card-title>
-        </v-card>
+          <RotatorMove></RotatorMove>
       </v-flex>
     </v-layout>
   </v-container>
@@ -27,18 +22,22 @@
 
 <script>
 import { bus } from '@/event-bus'
+import RotatorMove from './RotatorMove.vue';
 export default {
+  components: {
+    RotatorMove
+  },
   data() {
     return {
       version: null,
       cores: null,
       revision: null,
-      dev_mode:0
+      dev_mode: 0
     }
   },
   watch: {
     dev_mode(val) {
-      if (val>10){
+      if (val > 10) {
         //alert("Developer mode enabled");
         bus.$emit("dev_mode");
       }

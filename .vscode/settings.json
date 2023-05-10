@@ -1,7 +1,9 @@
 {
     "idf.adapterTargetName": "esp32s3",
     "idf.flashType": "UART",
-    "idf.port": "/dev/ttyUSB0",
+    "idf.port": "/dev/ttyUSB1",
+    "idf.monitorBaudRate": "115200",
+    "idf.flashBaudRate": "921600",
     "files.associations": {
         "sdkconfig.h": "c",
         "netbiosns.h": "c",

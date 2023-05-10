@@ -190,8 +190,8 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 	double elevation = cJSON_GetObjectItem(root, "elevation")->valuedouble;
 
 	if(is_admin(key)==77){
-		absolute_stepper(0,angle_to_steps(azimut-delta_angleX));
-		absolute_stepper(1,angle_to_steps(elevation-delta_angleY));
+		absolute_stepper(0,angle_to_steps(azimut-delta_angleX)*STEPPERS_GEAR_RATIO);
+		absolute_stepper(1,angle_to_steps(elevation-delta_angleY)*STEPPERS_GEAR_RATIO);
 		printf("angles: %f %f \r\n",azimut,elevation);
 	}
 

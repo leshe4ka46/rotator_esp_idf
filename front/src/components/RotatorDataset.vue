@@ -4,8 +4,8 @@
         <v-card flat >
           <v-container>
             <p class="text-center ">Углы</p>
-            <v-text-field label="Азимут" v-model="azimut" type="number" @keyup.enter.exact="sendangles" />
-            <v-text-field label="Элевация" v-model="elevation" type="number" @keyup.enter.exact="sendangles" />
+            <v-text-field label="Азимут" v-model="azimut" type="number" @keyup.enter="sendangles" />
+            <v-text-field label="Элевация" v-model="elevation" type="number" @keyup.enter="sendangles" />
           </v-container>
           <v-card-actions>
             <v-spacer></v-spacer>
