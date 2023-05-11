@@ -1,11 +1,11 @@
 <template>
-  <div class="container">
-      <v-layout text-xs-center >
-        <v-card flat >
+  <div>
+      <v-layout text-xs-center wrap>
+        <v-card max-width="300px" flat class="bcg">
           <v-container>
             <p class="text-center ">Углы</p>
-            <v-text-field label="Азимут" v-model="azimut" type="number" @keyup.enter="sendangles" />
-            <v-text-field label="Элевация" v-model="elevation" type="number" @keyup.enter="sendangles" />
+            <v-text-field label="Азимут" v-model="azimut" type="number" @keyup.enter="this.sendangles" />
+            <v-text-field label="Элевация" v-model="elevation" type="number" @keyup.enter="this.sendangles" />
           </v-container>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -13,7 +13,8 @@
             </v-btn>
           </v-card-actions>
         </v-card>
-        <br>
+        <div class="d-inline pa-2 bcg">
+        </div>
         <v-card max-width="300px" flat class="bcg">
           <p class="text-center ">Координаты спутника</p>
           <v-container>
@@ -27,7 +28,8 @@
             </v-btn>
           </v-card-actions>
         </v-card>
-        <br>
+        <div class="d-inline pa-2 bcg">
+        </div>
         <v-card max-width="300px" flat class="bcg">
           <p class="text-center ">
             Координаты поворотки
@@ -71,7 +73,7 @@ export default {
       sat_lat: 51.750014,
       sat_long: 36.168436,
       sat_height: 2000,
-      snackbar:false,
+      snackbar: false,
       /*list: ['GPS_CALC', 'UART', 'GPS+UART'],
       data: [{ id: 0, name: 'GPS_CALC' }, { id: 1, name: 'UART' }, { id: 2, name: 'GPS+UART' }],
       selectedOption: 1*/
@@ -95,7 +97,7 @@ export default {
           azimut: Number(this.azimut),
           elevation: Number(this.elevation)
         })
-        .then(() => {this.snackbar=true;})
+        .then(() => { this.snackbar = true; })
         .catch(error => {
           console.log(error)
         })
@@ -108,7 +110,7 @@ export default {
           lon: Number(this.sat_long),
           height: Number(this.sat_height)
         })
-        .then(() => {this.snackbar=true;})
+        .then(() => { this.snackbar = true; })
         .catch(error => {
           console.log(error)
         })
@@ -121,7 +123,7 @@ export default {
           lon: Number(this.home_long),
           height: Number(this.home_height)
         })
-        .then(() => {this.snackbar=true;})
+        .then(() => { this.snackbar = true; })
         .catch(error => {
           console.log(error)
         })

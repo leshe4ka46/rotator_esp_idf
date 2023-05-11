@@ -3,8 +3,8 @@
     "version": "0.4.2",
     "private": true,
     "scripts": {
-        "serve": "export NODE_ENV=development && vue-cli-service serve",
-        "build": "export NODE_ENV=release && vue-cli-service build && npm run gzip",
+        "serve": "vue-cli-service serve",
+        "build": "vue-cli-service build && npm run gzip",
         "lint": "vue-cli-service lint",
         "fix": "eslint ./src/* --fix  && npm run fix2",
         "fix2": "eslint ./src/components/* --fix",
@@ -14,12 +14,10 @@
         "@material-design-icons/svg": "^0.13.0",
         "@mdi/js": "^7.0.96",
         "@yeliulee/vue-mdi-svg": "^1.1.0",
-        "axios": "^1.1.2",
-        "core-js": "^2.6.5",
+        "axios": "1.1.2",
+        "core-js": "2.6.5",
         "vue": "^2.6.10",
-        "vue-router": "^3.0.3",
-        "vuetify": "^1.5.14",
-        "vuex": "^3.0.1"
+        "vuetify": "1.5.14"
     },
     "devDependencies": {
         "@mdi/font": "^7.0.96",

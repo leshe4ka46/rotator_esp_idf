@@ -1,29 +1,29 @@
 <template>
   <div class="container">
-      <v-layout text-xs-center wrap>
-        <v-flex xs12 justify-sm-center sm8>
-          <v-card>
-            <v-card-title primary-title>
-              <div class="ma-auto">
-                <h1><span class="black--text">{{ azimut }}&deg;</span></h1>
-                <span class="grey--text">Азимут</span>
-                <br>
-                <h1><span class="black--text">{{ elevation }}&deg;</span></h1>
-                <span class="grey--text">Элевация</span>
-                <br>
-                <h1><span class="black--text">{{ battery }} B</span></h1>
-                <span class="grey--text">Напряжение на батарее</span>
-                <br>
-                <h3><span class="black--text">{{ setted_azimut }}&deg; {{ setted_elevation }}&deg;</span></h3>
-                <span class="grey--text">Заданные значения</span>
-                <br>
-                <span class="red--text" v-if="delta_enabled">Задан относительный угол</span>
-                <br v-if="delta_enabled">
-              </div>
-            </v-card-title>
-          </v-card>
-        </v-flex>
-      </v-layout>
+    <v-layout text-xs-center wrap>
+      <v-flex xs12 sm6 offset-sm3>
+        <v-card>
+          <v-card-title primary-title>
+            <div class="ma-auto">
+              <h1><span class="black--text">{{ azimut }}&deg;</span></h1>
+              <span class="grey--text">Азимут</span>
+              <br>
+              <h1><span class="black--text">{{ elevation }}&deg;</span></h1>
+              <span class="grey--text">Элевация</span>
+              <br>
+              <h1><span class="black--text">{{ battery }} B</span></h1>
+              <span class="grey--text">Напряжение на батарее</span>
+              <br>
+              <h3><span class="black--text">{{ setted_azimut }}&deg; {{ setted_elevation }}&deg;</span></h3>
+              <span class="grey--text">Заданные значения</span>
+              <br>
+              <span class="red--text" v-if="delta_enabled">Задан относительный угол</span>
+              <br v-if="delta_enabled">
+            </div>
+          </v-card-title>
+        </v-card>
+      </v-flex>
+    </v-layout>
 
     <v-snackbar v-model="alert_axes" :timeout="0" color="red accent-2">
       Мотор не доехал до конца: {{ motors }}
@@ -54,15 +54,15 @@ export default {
       motors: "",
       alert_x: false,
       alert_y: false,
-      delta_enabled:0,
-      is_ready:1,
-      dorotate_enabled:null,
-      no_eth:0
+      delta_enabled: 0,
+      is_ready: 1,
+      dorotate_enabled: null,
+      no_eth: 0
     }
   },
-  watch:{
-    is_ready(val){
-      bus.$emit('is_ready',val)
+  watch: {
+    is_ready(val) {
+      bus.$emit('is_ready', val)
     }
   },
   created() {
@@ -73,15 +73,15 @@ export default {
         this.elevation = response.data.elevation.toFixed(2);
         this.setted_azimut = response.data.setted_azimut.toFixed(3);
         this.setted_elevation = response.data.setted_elevation.toFixed(3);
-        this.delta_enabled=response.data.delta_enabled;
-        this.is_ready=response.data.is_ready;
-        this.dorotate_enabled=response.data.dorotate_enabled;
-        bus.$emit('dorotate_enabled',this.dorotate_enabled)
-        this.no_eth=false;
+        this.delta_enabled = response.data.delta_enabled;
+        this.is_ready = response.data.is_ready;
+        this.dorotate_enabled = response.data.dorotate_enabled;
+        bus.$emit('dorotate_enabled', this.dorotate_enabled)
+        this.no_eth = false;
         this.check_angles();
-    }).catch(error => { // eslint-disable-next-line
+      }).catch(error => { // eslint-disable-next-line
         console.log(error);
-        this.no_eth=true;
+        this.no_eth = true;
       });
     }, 1000);
   },
@@ -127,7 +127,7 @@ export default {
           this.motors += "Y"
         }
       }
-      else{
+      else {
         this.alert_axes = false;
       }
 

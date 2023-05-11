@@ -2,7 +2,6 @@ import Vue from 'vue'
 import './plugins/vuetify'
 import App from './App.vue'
 import axios from 'axios'
-import '@yeliulee/vue-mdi-svg/src/styles.css'
 import MdiSvg from '@yeliulee/vue-mdi-svg/v2'
 Vue.config.productionTip = false
 

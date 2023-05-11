@@ -11,10 +11,9 @@
               <br>
               <span class="grey--text">Версия: 1.0.1</span>
               <br>
-              <v-btn tile color="warning" @click="restart_esp">Перезагрузить esp
+              <v-btn tile color="warning" @click="restart_esp">Перезагрузить поворотку
               </v-btn>
             </div>
-          <RotatorMove></RotatorMove>
       </v-flex>
     </v-layout>
   </v-container>
@@ -22,11 +21,7 @@
 
 <script>
 import { bus } from '@/event-bus'
-import RotatorMove from './RotatorMove.vue';
 export default {
-  components: {
-    RotatorMove
-  },
   data() {
     return {
       version: null,

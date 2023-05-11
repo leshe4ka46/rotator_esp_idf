@@ -1,5 +1,5 @@
 <template>
-  <v-container style="overflow: scroll;">
+  <v-container>
     <div>
       <label class="switch" >
         <input type="checkbox" v-model="dorotate" @click="do_rotate_switch" id="sw1">
@@ -40,8 +40,9 @@
     </div>
     <v-btn tile color="success" @click="save_wireless_mode">Сохранить</v-btn>
     <br>-->
+    <br>
     <p>
-      <a class="overflow-auto" href="RotatorApp.apk" v-if="w_ow<1300">Скачать (Android)</a>
+      <a class="overflow-auto" href="RotatorApp.apk" v-if="w_ow<1300">Скачать приложение (Android)</a>
     </p>
 
     <v-snackbar

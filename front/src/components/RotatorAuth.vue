@@ -28,7 +28,7 @@ export default {
   data() {
     return {
       login_loading: false,
-      is_admin: process.env.NODE_ENV === 'development',
+      is_admin: false,
       login: '',
       password: '',
       err_input_login:false,
