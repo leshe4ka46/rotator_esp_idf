@@ -26,7 +26,7 @@
         <v-toolbar-side-icon @click.stop="open_drawer" v-if="device == 1">
           <MdiSvg>{{ mdiMenu }}</MdiSvg>
         </v-toolbar-side-icon>
-        <v-toolbar-title>SPORADIC Rotator</v-toolbar-title>
+        <v-toolbar-title @click="page = 0">SPORADIC Rotator</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon v-if="is_admin == 1" @click="joystick_dialog = true">
           <MdiSvg>{{ mdiController }}</MdiSvg>

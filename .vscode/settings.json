@@ -8,7 +8,9 @@
         "sdkconfig.h": "c",
         "netbiosns.h": "c",
         "*.ipp": "c",
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "sstream": "c",
+        "regex": "c"
     },
     "C_Cpp.errorSquiggles": "enabled",
     "cmake.configureOnOpen": false,

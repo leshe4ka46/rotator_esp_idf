@@ -20,6 +20,11 @@
 #include "esp_chip_info.h"
 #include "stepper_logic.c"
 
+#include "lwip/err.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include <lwip/netdb.h>
+
 #include "math.h"
 
 static const char *REST_TAG = "esp-rest";
@@ -190,8 +195,8 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 	double elevation = cJSON_GetObjectItem(root, "elevation")->valuedouble;
 
 	if(is_admin(key)==77){
-		absolute_stepper(0,angle_to_steps(azimut-delta_angleX)*STEPPERS_GEAR_RATIO);
-		absolute_stepper(1,angle_to_steps(elevation-delta_angleY)*STEPPERS_GEAR_RATIO);
+		absolute_stepper(0,angle_to_steps(azimut-delta_angleX));
+		absolute_stepper(1,angle_to_steps(elevation-delta_angleY));
 		printf("angles: %f %f \r\n",azimut,elevation);
 	}
 
@@ -525,7 +530,7 @@ static esp_err_t delta_angle(httpd_req_t *req)
     if(is_admin(key)==77){
     	delta_angleX=azimut;
     	delta_angleY=elevation;
-    	printf("newdeltaX:%f %f\r\n",delta_angleX,delta_angleY);
+    	printf("new_delta:%f %f\r\n",delta_angleX,delta_angleY);
     	httpd_resp_sendstr(req, "{\"response\":1}");
     }
     else{
@@ -584,6 +589,141 @@ static esp_err_t restart_esp(httpd_req_t *req)
     cJSON_Delete(root);
     return ESP_OK;
 }
+char** parse_str = NULL;
+int len;
+char divider;
+char rx_buffer[128];
+void clear() {
+    if (parse_str) free(parse_str);
+}
+
+// количество разделённых данных в пакете
+int amount() {
+    int i = 0, count = 0;
+    while (rx_buffer[i]) if (rx_buffer[i++] == divider) count++;  // подсчёт разделителей
+    return ++count;
+}
+
+#define TCP_PORT                        4533
+#define TCP_KEEPALIVE_IDLE              5
+#define TCP_KEEPALIVE_INTERVAL          5
+#define TCP_KEEPALIVE_COUNT             3
+static const char *TCP_SRV_TAG = "tcp server";
+static void do_retransmit(const int sock)
+{
+    int len;
+    divider=' ';
+    do {
+        len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
+        if (len < 0) {
+            ESP_LOGE(TCP_SRV_TAG, "Error occurred during receiving: errno %d", errno);
+        } else if (len == 0) {
+            ESP_LOGW(TCP_SRV_TAG, "Connection closed");
+        } else {
+            rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
+            ESP_LOGI(TCP_SRV_TAG, "Received %d bytes: %s", len, rx_buffer);
+
+            len = amount();                     // количество данных
+            clear();                            // освобождаем буфер
+            parse_str = (char**)malloc(len * sizeof(char*)); // создаём буфер
+            parse_str[0] = rx_buffer;                       // строка 0
+            int i = 0, j = 0;                   // счётчики
+            while (rx_buffer[i]) {                    // пока не NULL
+                if (rx_buffer[i] == divider) {            // если разделитель
+                    rx_buffer[i] = '\0';              // меняем на NULL
+                    parse_str[++j] = rx_buffer + i + 1;     // запоминаем начало строки
+                }
+                i++;
+            }
+            ESP_LOGI(TCP_SRV_TAG, "Parsed %f %f", atof(parse_str[1]),atof(parse_str[2]));
+            absolute_stepper(0,angle_to_steps(atof(parse_str[1])-delta_angleX)*CONFIG_STEPPER_GEAR_RATIO);
+		    absolute_stepper(1,angle_to_steps(atof(parse_str[2])-delta_angleY)*CONFIG_STEPPER_GEAR_RATIO);
+            // send() can return less bytes than supplied length.
+            // Walk-around for robust implementation.
+            /*int to_write = len;
+            while (to_write > 0) {
+                int written = send(sock, rx_buffer + (len - to_write), to_write, 0);
+                if (written < 0) {
+                    ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
+                }
+                to_write -= written;
+            }*/
+        }
+    } while (len > 0);
+}
+
+static void tcp_server_task(void *pvParameters)
+{
+    int addr_family = (int)pvParameters;
+    int ip_protocol = 0;
+    int keepAlive = 1;
+    int keepIdle = TCP_KEEPALIVE_IDLE;
+    int keepInterval = TCP_KEEPALIVE_INTERVAL;
+    int keepCount = TCP_KEEPALIVE_COUNT;
+    struct sockaddr_storage dest_addr;
+
+    if (addr_family == AF_INET) {
+        struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
+        dest_addr_ip4->sin_addr.s_addr = htonl(INADDR_ANY);
+        dest_addr_ip4->sin_family = AF_INET;
+        dest_addr_ip4->sin_port = htons(TCP_PORT);
+        ip_protocol = IPPROTO_IP;
+    }
+
+    int listen_sock = socket(addr_family, SOCK_STREAM, ip_protocol);
+    if (listen_sock < 0) {
+        ESP_LOGE(TCP_SRV_TAG, "Unable to create socket: errno %d", errno);
+        vTaskDelete(NULL);
+        return;
+    }
+    int opt = 1;
+    setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    ESP_LOGI(TCP_SRV_TAG, "Socket created");
+
+    int err = bind(listen_sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+    if (err != 0) {
+        ESP_LOGE(TCP_SRV_TAG, "Socket unable to bind: errno %d", errno);
+        ESP_LOGE(TCP_SRV_TAG, "IPPROTO: %d", addr_family);
+        goto CLEAN_UP;
+    }
+    ESP_LOGI(TCP_SRV_TAG, "Socket bound, port %d", TCP_PORT);
+
+    err = listen(listen_sock, 1);
+    if (err != 0) {
+        ESP_LOGE(TCP_SRV_TAG, "Error occurred during listen: errno %d", errno);
+        goto CLEAN_UP;
+    }
+
+    while (1) {
+        struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
+        socklen_t addr_len = sizeof(source_addr);
+        int sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len);
+        if (sock < 0) {
+            ESP_LOGE(TCP_SRV_TAG, "Unable to accept connection: errno %d", errno);
+            break;
+        }
+
+        setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(int));
+        setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &keepIdle, sizeof(int));
+        setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
+        setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
+
+
+        do_retransmit(sock);
+
+        shutdown(sock, 0);
+        close(sock);
+    }
+
+CLEAN_UP:
+    close(listen_sock);
+    vTaskDelete(NULL);
+}
+
+
+
+
 esp_err_t start_rest_server(const char *base_path)
 {
 	init_nvs();
@@ -737,6 +877,7 @@ esp_err_t start_rest_server(const char *base_path)
     init_i2c(21,47,48,45); //new
     //init_i2c(7,6,19,8); //test board
     start_monitoring_AS5600();
+    xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
     ESP_LOGI("RAD","%.51f",radians(180));
     return ESP_OK;
 

@@ -85,7 +85,7 @@ float as5600_get_currentAngle(uint8_t device_addr,i2c_port_t i2c_port)
 
 	result=(uint16_t)(angle_high<<8|angle_low);
 	angle=((int) result & 0xFFF)*360.0/4096.0;
-	return 360.0f-angle;
+	return angle;
 }
 
 

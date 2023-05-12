@@ -72,7 +72,7 @@ uint32_t uniform_speed_hzy = 15000;
 uint32_t decel_samplesy = DEFAULT_DECEL_SAMPLES;
 uint32_t do_rotate_speed_hzy = 10000;
 
-uint8_t delta_stepper_pos=10;
+uint8_t delta_stepper_pos=100; //0.140625*
 
 int32_t steps_X,curr_steps_X,read_steps_X,steps_Y,curr_steps_Y,read_steps_Y;
 uint8_t motorX_isReady=1,motorY_isReady=1;
@@ -97,7 +97,7 @@ void stepperX_task(void *pvParameter)
     ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config_x, &motor_chan_x));
 
     gpio_set_level(STEP_MOTOR_GPIO_DIRX, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
-    gpio_set_level(STEP_MOTOR_GPIO_ENX, STEP_MOTOR_ENABLE_LEVEL);
+    //gpio_set_level(STEP_MOTOR_GPIO_ENX, STEP_MOTOR_ENABLE_LEVEL);
     stepper_motor_curve_encoder_config_t accel_encoder_configx = {
         .resolution = STEP_MOTOR_RESOLUTION_HZ,
         .sample_points = accel_samplesx,
@@ -198,7 +198,7 @@ void stepperY_task(void *pvParameter)
 	};
 	ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config_y, &motor_chan_y));
 	gpio_set_level(STEP_MOTOR_GPIO_DIRY, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
-	gpio_set_level(STEP_MOTOR_GPIO_ENY, STEP_MOTOR_ENABLE_LEVEL);
+	//gpio_set_level(STEP_MOTOR_GPIO_ENY, STEP_MOTOR_ENABLE_LEVEL);
 	stepper_motor_curve_encoder_config_t accel_encoder_configy = {
 		.resolution = STEP_MOTOR_RESOLUTION_HZ,
 		.sample_points = accel_samplesy,
