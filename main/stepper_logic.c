@@ -72,7 +72,7 @@ uint32_t uniform_speed_hzy = 15000;
 uint32_t decel_samplesy = DEFAULT_DECEL_SAMPLES;
 uint32_t do_rotate_speed_hzy = 10000;
 
-uint8_t delta_stepper_pos=100; //0.140625*
+uint8_t delta_stepper_pos=71; //0.0999*
 
 int32_t steps_X,curr_steps_X,read_steps_X,steps_Y,curr_steps_Y,read_steps_Y;
 uint8_t motorX_isReady=1,motorY_isReady=1;
@@ -95,7 +95,7 @@ void stepperX_task(void *pvParameter)
         .trans_queue_depth = 10, // set the number of transactions that can be pending in the background
     };
     ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config_x, &motor_chan_x));
-
+	gpio_set_level(STEP_MOTOR_GPIO_ENX, STEP_MOTOR_ENABLE_LEVEL);
     gpio_set_level(STEP_MOTOR_GPIO_DIRX, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
     //gpio_set_level(STEP_MOTOR_GPIO_ENX, STEP_MOTOR_ENABLE_LEVEL);
     stepper_motor_curve_encoder_config_t accel_encoder_configx = {
@@ -128,7 +128,7 @@ void stepperX_task(void *pvParameter)
 	curr_steps_X=steps_X=get_target(0);
 	while(1){
 		if(steps_X!=curr_steps_X){
-			gpio_set_level(STEP_MOTOR_GPIO_ENX, STEP_MOTOR_ENABLE_LEVEL);
+			//gpio_set_level(STEP_MOTOR_GPIO_ENX, STEP_MOTOR_ENABLE_LEVEL);
 			gpio_set_level(STEP_MOTOR_GPIO_DIRX, (steps_X>curr_steps_X)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
 			ESP_LOGI("anglesX","%ld %ld",steps_X,curr_steps_X);
 			if(abs(steps_X-curr_steps_X)<=DEFAULT_ACCEL_SAMPLES+DEFAULT_DECEL_SAMPLES){
@@ -160,19 +160,19 @@ void stepperX_task(void *pvParameter)
 			// wait all transactions finished
 			ESP_ERROR_CHECK(rmt_tx_wait_all_done(motor_chan_x, -1));
 			motorX_isReady=1;
-			gpio_set_level(STEP_MOTOR_GPIO_ENX, !STEP_MOTOR_ENABLE_LEVEL);
+			//gpio_set_level(STEP_MOTOR_GPIO_ENX, !STEP_MOTOR_ENABLE_LEVEL);
 		}
 		if(motorX_isReady==1 && DO_ROTATE_ENABLED){
 			read_steps_X=(as5600_getAngleXnolog(0)*STEPS_IN360);
 			if(curr_steps_X<read_steps_X-delta_stepper_pos || curr_steps_X>read_steps_X+delta_stepper_pos){
-				gpio_set_level(STEP_MOTOR_GPIO_ENX, STEP_MOTOR_ENABLE_LEVEL);
+				//gpio_set_level(STEP_MOTOR_GPIO_ENX, STEP_MOTOR_ENABLE_LEVEL);
 				tx_configX.loop_count = abs(curr_steps_X-read_steps_X);
 				ESP_LOGE("X stepper error", "curr_steps_X:%ld, read_steps_X:%ld delta:%d",curr_steps_X,read_steps_X,tx_configX.loop_count);
 				gpio_set_level(STEP_MOTOR_GPIO_DIRX, (read_steps_X<curr_steps_X)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
 
 				ESP_ERROR_CHECK(rmt_transmit(motor_chan_x, uniform_motor_encoderX, &do_rotate_speed_hzx, sizeof(do_rotate_speed_hzx), &tx_configX));
 				ESP_ERROR_CHECK(rmt_tx_wait_all_done(motor_chan_x, -1));
-				gpio_set_level(STEP_MOTOR_GPIO_ENX, !STEP_MOTOR_ENABLE_LEVEL);
+				//gpio_set_level(STEP_MOTOR_GPIO_ENX, !STEP_MOTOR_ENABLE_LEVEL);
 			}
 		}
 		vTaskDelay(pdMS_TO_TICKS(50));
@@ -198,7 +198,7 @@ void stepperY_task(void *pvParameter)
 	};
 	ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config_y, &motor_chan_y));
 	gpio_set_level(STEP_MOTOR_GPIO_DIRY, STEP_MOTOR_SPIN_DIR_CLOCKWISE);
-	//gpio_set_level(STEP_MOTOR_GPIO_ENY, STEP_MOTOR_ENABLE_LEVEL);
+	gpio_set_level(STEP_MOTOR_GPIO_ENY, STEP_MOTOR_ENABLE_LEVEL);
 	stepper_motor_curve_encoder_config_t accel_encoder_configy = {
 		.resolution = STEP_MOTOR_RESOLUTION_HZ,
 		.sample_points = accel_samplesy,
@@ -232,7 +232,7 @@ void stepperY_task(void *pvParameter)
 	steps_Y=curr_steps_Y=get_target(1);
 	while(1){
 		if(steps_Y!=curr_steps_Y){
-			gpio_set_level(STEP_MOTOR_GPIO_ENY, STEP_MOTOR_ENABLE_LEVEL);
+			//gpio_set_level(STEP_MOTOR_GPIO_ENY, STEP_MOTOR_ENABLE_LEVEL);
 			gpio_set_level(STEP_MOTOR_GPIO_DIRY, (steps_Y>curr_steps_Y)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
 			ESP_LOGI("anglesY","%ld %ld",steps_Y,curr_steps_Y);
 			if(abs(steps_Y-curr_steps_Y)<=DEFAULT_ACCEL_SAMPLES+DEFAULT_DECEL_SAMPLES){
@@ -262,18 +262,18 @@ void stepperY_task(void *pvParameter)
 			// wait all transactions finished
 			ESP_ERROR_CHECK(rmt_tx_wait_all_done(motor_chan_y, -1));
 			motorY_isReady=1;
-			gpio_set_level(STEP_MOTOR_GPIO_ENY, !STEP_MOTOR_ENABLE_LEVEL);
+			//gpio_set_level(STEP_MOTOR_GPIO_ENY, !STEP_MOTOR_ENABLE_LEVEL);
 		}
 		if(motorY_isReady==1 && DO_ROTATE_ENABLED){
 			read_steps_Y=(as5600_getAngleYnolog(0)*STEPS_IN360);
 			if(curr_steps_Y<read_steps_Y-delta_stepper_pos || curr_steps_Y>read_steps_Y+delta_stepper_pos){
-				gpio_set_level(STEP_MOTOR_GPIO_ENY, STEP_MOTOR_ENABLE_LEVEL);
+				//gpio_set_level(STEP_MOTOR_GPIO_ENY, STEP_MOTOR_ENABLE_LEVEL);
 				tx_configY.loop_count = abs(curr_steps_Y-read_steps_Y);
 				ESP_LOGE("Y stepper error", "curr_steps_Y:%ld, read_steps_Y:%ld delta:%d",curr_steps_Y,read_steps_Y,tx_configY.loop_count);
 				gpio_set_level(STEP_MOTOR_GPIO_DIRY, (read_steps_Y<curr_steps_Y)?STEP_MOTOR_SPIN_DIR_CLOCKWISE:STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE);
 				ESP_ERROR_CHECK(rmt_transmit(motor_chan_y, uniform_motor_encoderY, &do_rotate_speed_hzy, sizeof(do_rotate_speed_hzy), &tx_configY));
 				ESP_ERROR_CHECK(rmt_tx_wait_all_done(motor_chan_y, -1));
-				gpio_set_level(STEP_MOTOR_GPIO_ENY, !STEP_MOTOR_ENABLE_LEVEL);
+				//gpio_set_level(STEP_MOTOR_GPIO_ENY, !STEP_MOTOR_ENABLE_LEVEL);
 			}
 		}
 		vTaskDelay(pdMS_TO_TICKS(50));
