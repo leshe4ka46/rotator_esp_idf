@@ -64,7 +64,7 @@
     </v-dialog>
     <v-dialog v-model="joystick_dialog" max-width="550px">
       <v-card>
-        <RotatorMove style="font-size: 1.2em;"></RotatorMove>
+        <RotatorMove :opened="joystick_dialog" style="font-size: 1.2em;"></RotatorMove>
       </v-card>
     </v-dialog>
   </div>
@@ -149,9 +149,11 @@ export default {
       if (window.outerWidth < 1300) {
         //bus.$emit('device', {'mobile': true})
         this.device = 1
+        this.drawer = 0
       } else {
         this.device = 0
       }
+
     },
     open_drawer() {
       if (this.is_admin == true) {

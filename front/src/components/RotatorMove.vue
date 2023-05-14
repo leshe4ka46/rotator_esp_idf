@@ -41,17 +41,17 @@
 </template>
 
 <script>
-/*
-
-*/
+import { bus } from '@/event-bus'
 import { mdiArrowUpThin, mdiArrowDownThin, mdiArrowLeftThin, mdiArrowRightThin } from '@mdi/js';
 export default {
   name: 'RotatorMove',
+  props: ["opened"],
   data() {
     return {
-      MoveDistances: [0.1, 0.25, 1, 5, 10, 90],
+      MoveDistances: [0.1, 0.25, 1, 5, 10, 25],
       toggle: 1,
-      mdiArrowUpThin, mdiArrowDownThin, mdiArrowLeftThin, mdiArrowRightThin
+      mdiArrowUpThin, mdiArrowDownThin, mdiArrowLeftThin, mdiArrowRightThin,
+      safeJoy: null
     }
   },
   methods: {
@@ -63,6 +63,76 @@ export default {
           angle: ((val == 2 || val == 4) ? -1 : 1) * this.toggle
         })
     }
+  },
+  mounted() {
+    bus.$on("safeJoy", (val) => {
+      this.safeJoy = val;
+    })
+    document.addEventListener('keyup', (event) => {
+      if (this.opened == false && this.safeJoy) {
+        return 0
+      }
+      switch (event.key) {
+        case "1":
+          this.toggle = 0.1
+          break;
+        case "2":
+          this.toggle = 0.25
+          break;
+        case "3":
+          this.toggle = 1
+          break;
+        case "4":
+          this.toggle = 5
+          break;
+        case "5":
+          this.toggle = 10
+          break;
+        case "6":
+          this.toggle = 25
+          break;
+        case "w" || "ArrowUp" || "ц":
+          this.buttonClick(1)
+          break;
+        case "a":
+          this.buttonClick(2)
+          break;
+        case "d":
+          this.buttonClick(3)
+          break;
+        case "s":
+          this.buttonClick(4)
+          break;
+        case "ArrowUp":
+          this.buttonClick(1)
+          break;
+        case "ArrowLeft":
+          this.buttonClick(2)
+          break;
+        case "ArrowRight":
+          this.buttonClick(3)
+          break;
+        case "ArrowDown":
+          this.buttonClick(4)
+          break;
+        case "ц":
+          this.buttonClick(1)
+          break;
+        case "ф":
+          this.buttonClick(2)
+          break;
+        case "в":
+          this.buttonClick(3)
+          break;
+        case "ы":
+          this.buttonClick(4)
+          break;
+      }
+      var keyName = event.key;
+      var keyCode = event.code;
+      console.log(`Keydown: The key pressed is ${keyName} and its code value is ${keyCode}`);
+
+    }, false);
   }
 }
 </script>

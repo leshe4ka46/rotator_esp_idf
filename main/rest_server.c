@@ -238,6 +238,30 @@ static esp_err_t rotate_angle(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t angles_joystick(httpd_req_t *req)
+{
+    char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+    ESP_ERROR_CHECK(get_buf_from_request(req, buf));
+    cJSON *root = cJSON_Parse(buf);
+    if (!cJSON_HasObjectItem(root, "key") || !cJSON_HasObjectItem(root, "axis") || !cJSON_HasObjectItem(root, "angle"))
+    {
+        httpd_resp_sendstr(req, "{\"error\":\"args\"}");
+        return ESP_FAIL;
+    }
+    const char *key = cJSON_GetObjectItem(root, "key")->valuestring;
+    uint8_t axis = cJSON_GetObjectItem(root, "axis")->valueint;
+    double angle = cJSON_GetObjectItem(root, "angle")->valuedouble;
+
+    if (is_admin(key) == 77)
+    {
+        absolute_stepper(axis, get_pos(axis)+angle_to_steps(angle));
+    }
+
+    cJSON_Delete(root);
+    httpd_resp_sendstr(req, "{\"response\":1}");
+    return ESP_OK;
+}
+
 double receiver[3];
 double sputnic[3];
 double angle[2];
@@ -823,7 +847,7 @@ esp_err_t start_rest_server(const char *base_path)
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
-    config.max_uri_handlers = 16;
+    config.max_uri_handlers = 17;
     // config.max_open_sockets=13;
     config.lru_purge_enable = true;
 
@@ -872,6 +896,13 @@ esp_err_t start_rest_server(const char *base_path)
         .handler = anglesdatatx,
         .user_ctx = rest_context};
     httpd_register_uri_handler(server, &data_angles_post_uri);
+
+    httpd_uri_t data_angles_delta_post_uri = {
+        .uri = "/api/v1/data/set/delta",
+        .method = HTTP_POST,
+        .handler = angles_joystick,
+        .user_ctx = rest_context};
+    httpd_register_uri_handler(server, &data_angles_delta_post_uri);
 
     httpd_uri_t data_set_homegps_uri = {
         .uri = "/api/v1/data/set/homegps",
