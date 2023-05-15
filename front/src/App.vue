@@ -48,7 +48,7 @@
         </v-container>
         <v-container fill-height style="font-size: 1.2em;" v-if="device == 0">
           <RotatorMain style="max-width: 40%;"></RotatorMain>
-          <RotatorDataset></RotatorDataset>
+          <RotatorDataset v-if="is_admin"></RotatorDataset>
         </v-container>
       </v-content>
     </v-app>
@@ -116,7 +116,7 @@ export default {
           })
           .then(function (data) { // eslint-disable-next-line
             //console.log(data);
-            if (data.data === 'OK') {
+            if (data.data.response) {
               localStorage.setItem('rotator_client_id', key)
             }
           })
