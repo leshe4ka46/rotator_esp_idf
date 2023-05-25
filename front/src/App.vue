@@ -41,13 +41,13 @@
       </v-toolbar>
       <v-content>
         <v-container fill-height center style="font-size: 1.2em;" v-if="device == 1">
-          <RotatorMain v-if="page == 0"></RotatorMain>
+          <RotatorMain v-if="page == 0" :joy_opened="joystick_dialog"></RotatorMain>
           <keep-alive>
             <RotatorDataset v-if="page == 1"></RotatorDataset>
           </keep-alive>
         </v-container>
         <v-container fill-height style="font-size: 1.2em;" v-if="device == 0">
-          <RotatorMain style="max-width: 40%;"></RotatorMain>
+          <RotatorMain style="max-width: 40%;" :joy_opened="joystick_dialog"></RotatorMain>
           <RotatorDataset v-if="is_admin"></RotatorDataset>
         </v-container>
       </v-content>

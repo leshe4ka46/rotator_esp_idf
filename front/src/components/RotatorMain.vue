@@ -37,9 +37,9 @@
 
 <script>
 import { bus } from '@/event-bus'
-
 export default {
   name: 'RotatorMain',
+  props: ["joy_opened"],
   data() {
     return {
       azimut: 0,
@@ -67,22 +67,24 @@ export default {
   },
   created() {
     setInterval(() => {
-      this.$ajax.get(`/api/v1/data/get/angles`).then((response) => {
-        this.battery = response.data.voltage.toFixed(2);
-        this.azimut = response.data.azimut.toFixed(3);
-        this.elevation = response.data.elevation.toFixed(2);
-        this.setted_azimut = response.data.setted_azimut.toFixed(3);
-        this.setted_elevation = response.data.setted_elevation.toFixed(3);
-        this.delta_enabled = response.data.delta_enabled;
-        this.is_ready = response.data.is_ready;
-        this.dorotate_enabled = response.data.dorotate_enabled;
-        bus.$emit('dorotate_enabled', this.dorotate_enabled)
-        this.no_eth = false;
-        this.check_angles();
-      }).catch(error => { // eslint-disable-next-line
-        console.log(error);
-        this.no_eth = true;
-      });
+      if (!this.joy_opened) {
+        this.$ajax.get(`/api/v1/data/get/angles`).then((response) => {
+          this.battery = response.data.voltage.toFixed(2);
+          this.azimut = response.data.azimut.toFixed(5);
+          this.elevation = response.data.elevation.toFixed(5);
+          this.setted_azimut = response.data.setted_azimut.toFixed(3);
+          this.setted_elevation = response.data.setted_elevation.toFixed(3);
+          this.delta_enabled = response.data.delta_enabled;
+          this.is_ready = response.data.is_ready;
+          this.dorotate_enabled = response.data.dorotate_enabled;
+          bus.$emit('dorotate_enabled', this.dorotate_enabled)
+          this.no_eth = false;
+          this.check_angles();
+        }).catch(error => { // eslint-disable-next-line
+          console.log(error);
+          this.no_eth = true;
+        });
+      }
     }, 1000);
   },
 
