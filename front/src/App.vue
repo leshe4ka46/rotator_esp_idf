@@ -3,7 +3,7 @@
     <v-app id="inspire">
       <v-navigation-drawer v-model="drawer" fixed app clipped v-if="device == 1">
         <v-list dense v-model="page" rounded>
-          <v-list-tile @click="page = 0">
+          <v-list-tile @click="page = 0; drawer = false">
             <v-list-tile-action>
               <MdiSvg>{{ mdiHome }}</MdiSvg>
             </v-list-tile-action>
@@ -12,7 +12,7 @@
             </v-list-tile-content>
           </v-list-tile>
 
-          <v-list-tile @click="page = 1">
+          <v-list-tile @click="page = 1; drawer = false">
             <v-list-tile-action>
               <MdiSvg>{{ mdiChartBoxOutline }}</MdiSvg>
             </v-list-tile-action>
@@ -43,7 +43,8 @@
         <v-container fill-height center style="font-size: 1.2em;" v-if="device == 1">
           <RotatorMain v-if="page == 0" :joy_opened="joystick_dialog"></RotatorMain>
           <keep-alive>
-            <RotatorDataset v-if="page == 1"></RotatorDataset>
+            <RotatorDataset v-if="page == 1 && is_admin==true"></RotatorDataset>
+            <RotatorError text="Нужна авторизация" v-if="page == 1 && is_admin==false"/>
           </keep-alive>
         </v-container>
         <v-container fill-height style="font-size: 1.2em;" v-if="device == 0">
@@ -54,17 +55,17 @@
     </v-app>
     <v-dialog v-model="settings_dialog" max-width="650px">
       <v-card>
-        <RotatorSettings style="font-size: 1.2em;"></RotatorSettings>
+        <RotatorSettings style="font-size: 1.2em;" v-if="settings_dialog"></RotatorSettings>
       </v-card>
     </v-dialog>
     <v-dialog v-model="login_dialog" width="800">
       <v-card>
-        <RotatorAuth style="font-size: 1.5em;"></RotatorAuth>
+        <RotatorAuth style="font-size: 1.5em;" v-if="login_dialog"></RotatorAuth>
       </v-card>
     </v-dialog>
     <v-dialog v-model="joystick_dialog" max-width="550px">
       <v-card>
-        <RotatorMove :opened="joystick_dialog" style="font-size: 1.2em;"></RotatorMove>
+        <RotatorMove :opened="joystick_dialog" style="font-size: 1.2em;" v-if="joystick_dialog"></RotatorMove>
       </v-card>
     </v-dialog>
   </div>
@@ -72,11 +73,19 @@
 
 
 <script>
-import RotatorAuth from './components/RotatorAuth.vue'
+import { defineAsyncComponent } from 'vue';
+import RotatorLoading from './components/RotatorLoading.vue'
+import RotatorError from './components/RotatorError.vue'
+const RotatorAuth = defineAsyncComponent({loader: () => import('./components/RotatorAuth.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
+const RotatorSettings = defineAsyncComponent({loader: () => import('./components/RotatorSettings.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
+const RotatorMain = defineAsyncComponent({loader: () => import('./components/RotatorMain.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
+const RotatorDataset = defineAsyncComponent({loader: () => import('./components/RotatorDataset.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
+const RotatorMove = defineAsyncComponent({loader: () => import('./components/RotatorMove.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
+/*import RotatorAuth from './components/RotatorAuth.vue'
 import RotatorSettings from './components/RotatorSettings.vue'
 import RotatorMain from './components/RotatorMain.vue'
 import RotatorDataset from './components/RotatorDataset.vue'
-import RotatorMove from './components/RotatorMove.vue';
+import RotatorMove from './components/RotatorMove.vue';*/
 import { bus } from '@/event-bus'
 import { mdiMenu, mdiHome, mdiChartBoxOutline, mdiWrenchCog, mdiLoginVariant, mdiLampsOutline, mdiController } from '@mdi/js'
 export default {
@@ -101,18 +110,13 @@ export default {
       device: 0   // 0 - pc, 1 - mobile
     }
   },
-  watch: {
-    page() {
-      this.drawer = false
-    }
-  },
   created() {
     if (localStorage.getItem('rotator_client_id') == null || localStorage.getItem('rotator_client_id').length > 8) {
       try {
         var key = this.makeid(8)
         this.$ajax
           .post('/api/v1/users/add', {
-            key: this.makeid(8)
+            key: key
           })
           .then(function (data) { // eslint-disable-next-line
             //console.log(data);
@@ -142,14 +146,13 @@ export default {
     }, 2500)
   },
   components: {
-    RotatorAuth, RotatorSettings, RotatorDataset, RotatorMain, RotatorMove
+    RotatorAuth, RotatorSettings, RotatorDataset, RotatorMain, RotatorMove, RotatorError
   },
   methods: {
     set_device() {
-      if (window.outerWidth < 1300) {
+      if (window.innerWidth < 1300) {
         //bus.$emit('device', {'mobile': true})
         this.device = 1
-        this.drawer = 0
       } else {
         this.device = 0
       }
@@ -157,7 +160,7 @@ export default {
     },
     open_drawer() {
       if (this.is_admin == true) {
-        this.drawer = !this.drawer
+        this.drawer = true;
       }
       else {
         this.login_dialog = true;

@@ -53,7 +53,6 @@
 </template>
 
 <script>
-
 import { mdiSend, mdiArrowDownDropCircleOutline } from '@mdi/js'
 import { bus } from '@/event-bus'
 export default {

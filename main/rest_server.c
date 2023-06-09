@@ -82,6 +82,10 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
     }
     return httpd_resp_set_type(req, type);
 }
+void slice(const char *str, char *result, size_t start, size_t end)
+{
+    strncpy(result, str + start, end - start);
+}
 char filter[10];
 /* Send HTTP response with the contents of the requested file */
 static esp_err_t rest_common_get_handler(httpd_req_t *req)
@@ -92,7 +96,7 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
     strlcpy(filepath, rest_context->base_path, sizeof(filepath));
     if (req->uri[strlen(req->uri) - 1] == '/')
     {
-        strlcat(filepath, "/upd.html", sizeof(filepath));
+        strlcat(filepath, "/index.html", sizeof(filepath));
     }
     else
     {
@@ -119,12 +123,18 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
         httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);*/
         return ESP_OK;
     }
+    if (CHECK_FILE_EXTENSION(filepath, ".js"))
+    {
+        char newfp[FILE_PATH_MAX - 3];
+        slice(filepath, newfp, 0, 140);
+        sprintf(filepath, "%s.gz", newfp);
+    }
     ESP_LOGI(REST_TAG, "path : %s", filepath);
     int fd = open(filepath, O_RDONLY, 0);
     if (fd == -1)
     {
         ESP_LOGE(REST_TAG, "Failed to open file : %s", filepath);
-        httpd_resp_send(req, "<html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title><script>function goto_root(){window.location.href=\"/\"}</script></head><body><center><h1>404 Not Found</h1><button onclick=\"goto_root()\">Go to root</button></center><hr><center>rotator/1.0.1</center></body></html>", HTTPD_RESP_USE_STRLEN);
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "<html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\"><title>404 Not Found</title><script>function goto_root(){window.location.href=\"/\"}</script></head><body><center><h1>404 Not Found</h1><button onclick=\"goto_root()\">Go to root</button></center><hr><center>rotator/1.0.1</center></body></html>");
         return ESP_OK;
     }
 
@@ -203,7 +213,7 @@ static esp_err_t system_info_get_handler(httpd_req_t *req)
 //------------------------------STEPPER----------
 
 float delta_angleX = 0, delta_angleY = 0;
-float joystick_delta_angleX = 0, joystick_delta_angleY = 0;
+float joy_delta_angleX = 0, joy_delta_angleY = 0;
 #define STEPS_PER_ROTATION CONFIG_STEPPER_STEPS_PER_ROTATION
 #define STEPPERS_MICROSTEP CONFIG_STEPPER_MICROSTEP
 #define STEPPERS_GEAR_RATIO CONFIG_STEPPER_GEAR_RATIO
@@ -229,8 +239,8 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 
     if (is_admin(key) == 77)
     {
-        absolute_stepper(0, angle_to_steps(azimut - delta_angleX + joystick_delta_angleX));
-        absolute_stepper(1, angle_to_steps(elevation - delta_angleY + joystick_delta_angleY));
+        absolute_stepper(0, angle_to_steps(azimut - delta_angleX + joy_delta_angleX));
+        absolute_stepper(1, angle_to_steps(elevation - delta_angleY + joy_delta_angleY));
         printf("angles: %f %f \r\n", azimut, elevation);
     }
 
@@ -261,21 +271,21 @@ static esp_err_t angles_joystick(httpd_req_t *req)
 
             for (uint8_t i = 0; i < 2; i++)
             {
-                absolute_stepper(i, get_pos(i) - angle_to_steps((i==0)?joystick_delta_angleX:joystick_delta_angleY));
+                absolute_stepper(i, get_pos(i) - angle_to_steps((i == 0) ? joy_delta_angleX : joy_delta_angleY));
             }
-            joystick_delta_angleX = 0;
-            joystick_delta_angleY = 0;
+            joy_delta_angleX = 0;
+            joy_delta_angleY = 0;
         }
         else
         {
             absolute_stepper(axis, get_pos(axis) + angle_to_steps(angle));
             if (axis == 0)
             {
-                joystick_delta_angleX += (float)angle;
+                joy_delta_angleX += (float)angle;
             }
             else if (axis == 1)
             {
-                joystick_delta_angleY += (float)angle;
+                joy_delta_angleY += (float)angle;
             }
         }
     }
@@ -433,8 +443,8 @@ static esp_err_t sat_set_gps(httpd_req_t *req)
 
                 aiming(radians(receiver[0]), radians(receiver[1]), receiver[2], radians(sputnic[0]), radians(sputnic[1]), sputnic[2], &angle[0], &angle[1]);
                 ESP_LOGI("CALC GPS", "%f %f", angle[0], angle[1]);
-                absolute_stepper(0, angle_to_steps(angle[0] - delta_angleX + joystick_delta_angleX));
-                absolute_stepper(1, angle_to_steps(angle[1] - delta_angleY + joystick_delta_angleY));
+                absolute_stepper(0, angle_to_steps(angle[0] - delta_angleX + joy_delta_angleX));
+                absolute_stepper(1, angle_to_steps(angle[1] - delta_angleY + joy_delta_angleY));
             }
         }
         else
@@ -507,11 +517,11 @@ static esp_err_t anglesdatatx(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "application/json");
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, "azimut", (as5600_getAngleX() / STEPPERS_GEAR_RATIO + delta_angleX - joystick_delta_angleX));
-    cJSON_AddNumberToObject(root, "elevation", (as5600_getAngleY() / STEPPERS_GEAR_RATIO + delta_angleY - joystick_delta_angleY));
+    cJSON_AddNumberToObject(root, "azimut", (as5600_getAngleX() / STEPPERS_GEAR_RATIO + delta_angleX - joy_delta_angleX));
+    cJSON_AddNumberToObject(root, "elevation", (as5600_getAngleY() / STEPPERS_GEAR_RATIO + delta_angleY - joy_delta_angleY));
     cJSON_AddNumberToObject(root, "voltage", 0.00);
-    cJSON_AddNumberToObject(root, "setted_azimut", ((float)steps_to_angle * get_pos(0) + delta_angleX));
-    cJSON_AddNumberToObject(root, "setted_elevation", ((float)steps_to_angle * get_pos(1) + delta_angleY));
+    cJSON_AddNumberToObject(root, "setted_azimut", ((float)steps_to_angle * get_pos(0) + delta_angleX - joy_delta_angleX));
+    cJSON_AddNumberToObject(root, "setted_elevation", ((float)steps_to_angle * get_pos(1) + delta_angleY - joy_delta_angleY));
     cJSON_AddNumberToObject(root, "is_ready", motor_isready());
     cJSON_AddNumberToObject(root, "delta_enabled", (delta_angleX == 0 && delta_angleY == 0) ? 0 : 1);
     cJSON_AddNumberToObject(root, "dorotate_enabled", do_rotate_get());
@@ -525,10 +535,10 @@ static esp_err_t joyanglesdatatx(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "application/json");
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, "azimut", (as5600_getAngleX() / STEPPERS_GEAR_RATIO + delta_angleX - joystick_delta_angleX));
-    cJSON_AddNumberToObject(root, "elevation", (as5600_getAngleY() / STEPPERS_GEAR_RATIO + delta_angleY - joystick_delta_angleY));
-    cJSON_AddNumberToObject(root, "deltajoyazimut", joystick_delta_angleX);
-    cJSON_AddNumberToObject(root, "deltajoyelevation", joystick_delta_angleY);
+    cJSON_AddNumberToObject(root, "azimut", (as5600_getAngleX() / STEPPERS_GEAR_RATIO + delta_angleX - joy_delta_angleX));
+    cJSON_AddNumberToObject(root, "elevation", (as5600_getAngleY() / STEPPERS_GEAR_RATIO + delta_angleY - joy_delta_angleY));
+    cJSON_AddNumberToObject(root, "deltajoyazimut", joy_delta_angleX);
+    cJSON_AddNumberToObject(root, "deltajoyelevation", joy_delta_angleY);
     const char *sys_info = cJSON_Print(root);
     httpd_resp_sendstr(req, sys_info);
     free((void *)sys_info);
@@ -659,6 +669,7 @@ static esp_err_t delta_angle(httpd_req_t *req)
     {
         delta_angleX = azimut;
         delta_angleY = elevation;
+        set_delta(delta_angleX, delta_angleY);
         printf("new_delta:%f %f\r\n", delta_angleX, delta_angleY);
         httpd_resp_sendstr(req, "{\"response\":1}");
     }
@@ -784,8 +795,8 @@ static void do_retransmit(const int sock)
                 i++;
             }
             ESP_LOGI(TCP_SRV_TAG, "Parsed %f %f", atof(parse_str[1]), atof(parse_str[2]));
-            absolute_stepper(0, angle_to_steps(atof(parse_str[1]) - delta_angleX + joystick_delta_angleX));
-            absolute_stepper(1, angle_to_steps(atof(parse_str[2]) - delta_angleY + joystick_delta_angleY));
+            absolute_stepper(0, angle_to_steps(atof(parse_str[1]) - delta_angleX + joy_delta_angleX));
+            absolute_stepper(1, angle_to_steps(atof(parse_str[2]) - delta_angleY + joy_delta_angleY));
             // send() can return less bytes than supplied length.
             // Walk-around for robust implementation.
             /*int to_write = len;
@@ -876,11 +887,11 @@ CLEAN_UP:
 
 void close_fd_cb(httpd_handle_t hd, int sockfd)
 {
-   struct linger so_linger;
-   so_linger.l_onoff = true;
-   so_linger.l_linger = 0;
-   setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
-   close(sockfd);
+    struct linger so_linger;
+    so_linger.l_onoff = true;
+    so_linger.l_linger = 0;
+    setsockopt(sockfd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
+    close(sockfd);
 }
 esp_err_t start_rest_server(const char *base_path)
 {
@@ -893,10 +904,10 @@ esp_err_t start_rest_server(const char *base_path)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.max_uri_handlers = 18;
-    config.close_fn=close_fd_cb;
-    config.enable_so_linger=false;
-    config.linger_timeout=0;
-    //config.max_open_sockets=13;
+    config.close_fn = close_fd_cb;
+    config.enable_so_linger = false;
+    config.linger_timeout = 0;
+    // config.max_open_sockets=13;
     config.lru_purge_enable = true;
 
     ESP_LOGI(REST_TAG, "Starting HTTP Server");
@@ -1029,6 +1040,7 @@ esp_err_t start_rest_server(const char *base_path)
         .user_ctx = rest_context};
     httpd_register_uri_handler(server, &common_get_uri);
 
+    get_joy_delta(joy_delta_angleX, joy_delta_angleY);
     init_steppers();
     init_i2c(21, 47, 48, 45); // new
     // init_i2c(7,6,19,8); //test board

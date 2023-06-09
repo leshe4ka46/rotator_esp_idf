@@ -42,7 +42,7 @@
     <br>-->
     <br>
     <p>
-      <a class="overflow-auto" href="RotatorApp.apk" v-if="w_ow<1300">Скачать приложение (Android)</a>
+      <a class="overflow-auto" href="RotatorApp.apk" v-if="w_iw<1300">Скачать приложение (Android)</a>
     </p>
 
     <v-snackbar
@@ -65,11 +65,11 @@ export default {
       data:[{name:"AP",value:0},{name:"STA",value:1}],
       val:0,
       dorotate:true,
-      w_ow:0
+      w_iw:0
     }
   },
   created() {
-    this.w_ow =window.outerWidth
+    this.w_iw =window.innerWidth
     bus.$on('dorotate_enabled',(val)=>{this.dorotate=(val==1)?true:false})
   },
   methods: {

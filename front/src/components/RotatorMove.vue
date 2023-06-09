@@ -2,8 +2,10 @@
   <v-container>
     <v-layout text-xs-center wrap>
       <v-flex xs12 sm6 offset-sm3>
-        <h1><span class="black--text">{{ azimutReal }}&deg;</span>&#09;<span class="black--text">{{ azimutCorrected
-        }}&deg;</span></h1>
+        <h1>
+          <span class="black--text">{{ azimutReal }}&deg;</span>&#09;<span class="black--text">{{ azimutCorrected
+          }}&deg;</span>
+        </h1>
         <span class="grey--text">Азимут</span>
         <br>
         <h1><span class="black--text">{{ elevationReal }}&deg;</span>&#09;<span class="black--text">{{ elevationCorrected
@@ -62,7 +64,7 @@ export default {
     return {
       moveDistances: [0.1, 0.25, 1, 5, 10, 25],
       toggle: 1,
-      mdiArrowUpThin, mdiArrowDownThin, mdiArrowLeftThin, mdiArrowRightThin,mdiHome,
+      mdiArrowUpThin, mdiArrowDownThin, mdiArrowLeftThin, mdiArrowRightThin, mdiHome,
       safeJoy: null,
       azimutReal: 0,
       azimutCorrected: 0,
@@ -77,7 +79,7 @@ export default {
           key: localStorage.getItem('rotator_client_id'),
           axis: (val == 1 || val == 4) ? 1 : 0,
           angle: ((val == 2 || val == 4) ? -1 : 1) * this.toggle,
-          reset: (val==0)*1
+          reset: (val == 0) * 1
         })
     },
 
@@ -90,9 +92,9 @@ export default {
       if (this.opened) {
         this.$ajax.get(`/api/v1/data/get/joyangles`).then((response) => {
           this.azimutReal = response.data.azimut.toFixed(3);
-          this.azimutCorrected = (Number(response.data.azimut)+Number(response.data.deltajoyazimut)).toFixed(3);
+          this.azimutCorrected = (Number(response.data.azimut) + Number(response.data.deltajoyazimut)).toFixed(3);
           this.elevationReal = response.data.elevation.toFixed(3);
-          this.elevationCorrected = (Number(response.data.elevation)+Number(response.data.deltajoyelevation)).toFixed(3);
+          this.elevationCorrected = (Number(response.data.elevation) + Number(response.data.deltajoyelevation)).toFixed(3);
         }).catch(error => { // eslint-disable-next-line
           console.log(error);
         });
@@ -167,4 +169,5 @@ export default {
   width: 50px;
   height: 50px;
   padding: 0;
-}</style>
+}
+</style>

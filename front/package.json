@@ -4,11 +4,13 @@
     "private": true,
     "scripts": {
         "serve": "vue-cli-service serve",
-        "build": "vue-cli-service build && npm run gzip",
+        "build": "vue-cli-service build && npm run gzipjs && npm run replace",
         "lint": "vue-cli-service lint",
         "fix": "eslint ./src/* --fix  && npm run fix2",
         "fix2": "eslint ./src/components/* --fix",
-        "gzip": "cd dist/js && sudo 7z a -tgzip app.js.gz app.js && rm -rf app.js"
+        "gzip": "cd dist/js && sudo 7z a -tgzip app.js.gz app.js && rm -rf app.js",
+        "gzipjs": "cd dist/js && for f in ./*.js; do sudo 7z a -tgzip $f.gz $f; done && rm -rf *.js",
+        "replace": "cd dist && sudo sed -i -e 's/js\"/js.gz\"/g' index.html"
     },
     "dependencies": {
         "@material-design-icons/svg": "^0.13.0",

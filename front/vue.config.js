@@ -2,7 +2,7 @@
 
 module.exports = {
   productionSourceMap: false,
-  filenameHashing: false,
+  /*filenameHashing: false,
   css: {
     extract: false,
   },
@@ -14,5 +14,13 @@ module.exports = {
       filename: "js/[name].js",
       chunkFilename: "js/[name].js",
     }
-  }
+  },*/
+  configureWebpack: {
+    optimization: {
+      splitChunks: {
+        minSize: 10000,
+        maxSize: 250000,
+      },
+    },
+  },
 };

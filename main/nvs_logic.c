@@ -9,7 +9,8 @@
 #include "nvs.h"
 #include <string.h>
 
-void check_err(esp_err_t err){
+void check_err(esp_err_t err)
+{
     switch (err)
     {
     case ESP_OK:
@@ -21,33 +22,36 @@ void check_err(esp_err_t err){
         printf("Error (%s) reading!\n", esp_err_to_name(err));
     }
 }
-uint8_t curr_err=0;
-nvs_handle_t open_nvs(const char* namespace,nvs_open_mode_t mode){
+uint8_t curr_err = 0;
+nvs_handle_t open_nvs(const char *namespace, nvs_open_mode_t mode)
+{
     nvs_handle_t ws;
     esp_err_t err;
-    err=nvs_open(namespace, mode, &ws);
+    err = nvs_open(namespace, mode, &ws);
     if (err != ESP_OK)
     {
         printf("Error (%s) opening NVS!\n", esp_err_to_name(err));
-        curr_err=1;
+        curr_err = 1;
     }
-    else{
-        curr_err=0;
+    else
+    {
+        curr_err = 0;
     }
     return ws;
 }
 
 esp_err_t init_nvs(void)
 {
-	esp_err_t err = nvs_flash_init();
-	if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-	   // NVS partition was truncated and needs to be erased
-	   // Retry nvs_flash_init
-	   ESP_ERROR_CHECK(nvs_flash_erase());
-	   err = nvs_flash_init();
-	 }
-	 ESP_ERROR_CHECK( err );
-	 return err;
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        // NVS partition was truncated and needs to be erased
+        // Retry nvs_flash_init
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(err);
+    return err;
 }
 esp_err_t user_nfs_err;
 esp_err_t clear_nvs(void)
@@ -92,7 +96,8 @@ esp_err_t set_user(const char *uid, int8_t role)
 }
 int8_t is_admin(const char *uid)
 {
-    if(strcmp(uid, "SATAPPSP") == 0){
+    if (strcmp(uid, "SATAPPSP") == 0)
+    {
         return 77;
     }
     nvs_handle_t userdata;
@@ -110,7 +115,7 @@ int8_t is_admin(const char *uid)
         break;
     case ESP_ERR_NVS_NOT_FOUND:
         printf("The value is not initialized yet!\n");
-        set_user(uid,0);
+        set_user(uid, 0);
         return 0;
         break;
     default:
@@ -119,7 +124,6 @@ int8_t is_admin(const char *uid)
     nvs_close(userdata);
     return role;
 }
-
 
 esp_err_t set_wifi(int8_t value)
 {
@@ -134,7 +138,8 @@ int8_t get_wifi()
 {
     int8_t value;
     nvs_handle_t ws = open_nvs("wifi_settings", NVS_READONLY);
-    if(curr_err){
+    if (curr_err)
+    {
         set_wifi(0);
     }
     check_err(nvs_get_i8(ws, "mode", &value));
@@ -142,12 +147,7 @@ int8_t get_wifi()
     return value;
 }
 
-
-
-
-
-
-esp_err_t set_turns(int32_t vX,int32_t vY)
+esp_err_t set_turns(int32_t vX, int32_t vY)
 {
     nvs_handle_t ws = open_nvs("turns", NVS_READWRITE);
     check_err(nvs_set_i32(ws, "x", vX));
@@ -156,73 +156,54 @@ esp_err_t set_turns(int32_t vX,int32_t vY)
     nvs_close(ws);
     return ESP_OK;
 }
-
-
-int32_t turnsX,turnsY;
-int8_t get_turns()
+int8_t get_turns(int32_t turnsX, int32_t turnsY)
 {
     nvs_handle_t ws = open_nvs("turns", NVS_READONLY);
-    if(curr_err){
-        set_turns(0,0);
+    if (curr_err)
+    {
+        set_turns(0, 0);
     }
     check_err(nvs_get_i32(ws, "x", &turnsX));
     check_err(nvs_get_i32(ws, "y", &turnsY));
     nvs_close(ws);
     return 1;
 }
-int32_t get_turns_X()
-{
-    return turnsX;
-}
-int32_t get_turns_Y()
-{
-    return turnsY;
-}
 
-
-esp_err_t set_delta(float vX,float vY)
+esp_err_t set_delta(float vX, float vY)
 {
     nvs_handle_t ws = open_nvs("delta", NVS_READWRITE);
-    check_err(nvs_set_i32(ws, "x", (int32_t)(vX*1000)));
-    check_err(nvs_set_i32(ws, "y", (int32_t)(vY*1000)));
+    check_err(nvs_set_i32(ws, "x", (int32_t)(vX * 1000)));
+    check_err(nvs_set_i32(ws, "y", (int32_t)(vY * 1000)));
     nvs_commit(ws);
     nvs_close(ws);
     return ESP_OK;
 }
 
-
-int32_t deltaX,deltaY;
-int8_t get_delta()
+int32_t deltaX, deltaY;
+int8_t get_delta(int32_t deltaX, int32_t deltaY)
 {
     nvs_handle_t ws = open_nvs("delta", NVS_READONLY);
-    if(curr_err){
-        set_delta(0,0);
+    if (curr_err)
+    {
+        set_delta(0, 0);
     }
     check_err(nvs_get_i32(ws, "x", &deltaX));
     check_err(nvs_get_i32(ws, "y", &deltaY));
     nvs_close(ws);
+    deltaX /= 1000.0f;
+    deltaY /= 1000.0f;
     return 1;
 }
 
-float get_delta_X()
-{
-    return (float)deltaX/1000;
-}
-
-float get_delta_Y()
-{
-    return (float)deltaY/1000;
-}
-
-
-
-esp_err_t set_target(int32_t val,uint8_t uid)
+esp_err_t set_target(int32_t val, uint8_t uid)
 {
     nvs_handle_t ws = open_nvs("target", NVS_READWRITE);
-    if(uid==0){
+    if (uid == 0)
+    {
         check_err(nvs_set_i32(ws, "x", val));
     }
-    else if(uid==1){
+    else if (uid == 1)
+    {
         check_err(nvs_set_i32(ws, "y", val));
     }
     nvs_commit(ws);
@@ -234,17 +215,45 @@ int32_t get_target(uint8_t uid)
 {
     int32_t val;
     nvs_handle_t ws = open_nvs("target", NVS_READONLY);
-    if(curr_err){
-        set_target(0,0);
+    if (curr_err)
+    {
+        set_target(0, 0);
     }
-    if(uid==0){
+    if (uid == 0)
+    {
         check_err(nvs_get_i32(ws, "x", &val));
     }
-    else if(uid==1){
+    else if (uid == 1)
+    {
         check_err(nvs_get_i32(ws, "y", &val));
     }
     nvs_close(ws);
     return val;
+}
+
+esp_err_t set_joy_delta(float vX, float vY)
+{
+    nvs_handle_t ws = open_nvs("joydelta", NVS_READWRITE);
+    check_err(nvs_set_i32(ws, "x", (int32_t)(vX * 1000)));
+    check_err(nvs_set_i32(ws, "y", (int32_t)(vY * 1000)));
+    nvs_commit(ws);
+    nvs_close(ws);
+    return ESP_OK;
+}
+
+int8_t get_joy_delta(int32_t _joy_deltaX, int32_t _joy_deltaY)
+{
+    nvs_handle_t ws = open_nvs("joydelta", NVS_READONLY);
+    if (curr_err)
+    {
+        set_joy_delta(0, 0);
+    }
+    check_err(nvs_get_i32(ws, "x", &_joy_deltaX));
+    check_err(nvs_get_i32(ws, "y", &_joy_deltaY));
+    nvs_close(ws);
+    _joy_deltaX /= 1000.0f;
+    _joy_deltaY /= 1000.0f;
+    return 1;
 }
 
 /*
