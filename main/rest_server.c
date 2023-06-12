@@ -288,6 +288,11 @@ static esp_err_t angles_joystick(httpd_req_t *req)
                 joy_delta_angleY += (float)angle;
             }
         }
+        set_joy_delta(joy_delta_angleX,joy_delta_angleY);
+        ESP_LOGI("joy_delta_angle","%f %f",joy_delta_angleX,joy_delta_angleY);
+        get_joy_delta(&joy_delta_angleX,&joy_delta_angleY);
+        ESP_LOGI("joy_delta_angle_get","%f %f",joy_delta_angleX,joy_delta_angleY);
+        ESP_LOGI("angles","%f %f",(float)steps_to_angle*get_pos(0),(float)steps_to_angle*get_pos(1));
     }
 
     cJSON_Delete(root);
@@ -519,7 +524,7 @@ static esp_err_t anglesdatatx(httpd_req_t *req)
     cJSON *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "azimut", (as5600_getAngleX() / STEPPERS_GEAR_RATIO + delta_angleX - joy_delta_angleX));
     cJSON_AddNumberToObject(root, "elevation", (as5600_getAngleY() / STEPPERS_GEAR_RATIO + delta_angleY - joy_delta_angleY));
-    cJSON_AddNumberToObject(root, "voltage", 0.00);
+    //cJSON_AddNumberToObject(root, "voltage", 0.00);
     cJSON_AddNumberToObject(root, "setted_azimut", ((float)steps_to_angle * get_pos(0) + delta_angleX - joy_delta_angleX));
     cJSON_AddNumberToObject(root, "setted_elevation", ((float)steps_to_angle * get_pos(1) + delta_angleY - joy_delta_angleY));
     cJSON_AddNumberToObject(root, "is_ready", motor_isready());
@@ -669,7 +674,7 @@ static esp_err_t delta_angle(httpd_req_t *req)
     {
         delta_angleX = azimut;
         delta_angleY = elevation;
-        set_delta(delta_angleX, delta_angleY);
+        set_delta_angles(delta_angleX, delta_angleY);
         printf("new_delta:%f %f\r\n", delta_angleX, delta_angleY);
         httpd_resp_sendstr(req, "{\"response\":1}");
     }
@@ -995,7 +1000,8 @@ esp_err_t start_rest_server(const char *base_path)
         .uri = "/api/v1/data/set/dorotate",
         .method = HTTP_POST,
         .handler = set_dorotate,
-        .user_ctx = rest_context};
+        .user_ctx = rest_context
+        };
     httpd_register_uri_handler(server, &data_set_dorotate_uri);
 
     httpd_uri_t data_set_angles_uri = {
@@ -1040,7 +1046,8 @@ esp_err_t start_rest_server(const char *base_path)
         .user_ctx = rest_context};
     httpd_register_uri_handler(server, &common_get_uri);
 
-    get_joy_delta(joy_delta_angleX, joy_delta_angleY);
+    get_joy_delta(&joy_delta_angleX, &joy_delta_angleY);
+    get_delta_angles(&delta_angleX, &delta_angleY);
     init_steppers();
     init_i2c(21, 47, 48, 45); // new
     // init_i2c(7,6,19,8); //test board

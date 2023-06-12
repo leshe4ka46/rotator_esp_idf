@@ -97,9 +97,9 @@ int32_t turnsY=0;
 uint8_t upd_turns=0;
 void tickAS5600(void *pvParameter)
 {
-	get_turns(turnsX,turnsY);
-	get_delta(as_delta_angleX,as_delta_angleY);
-	
+	get_turns(&turnsX,&turnsY);
+	get_delta(&as_delta_angleX,&as_delta_angleY);
+
 	as_prevangleX=as5600_get_currentAngle(AS5600_ADDR,I2C_X);
 	as_angleX=as_prevangleX;
 	//as_delta_angleX=get_delta_X();//=as_angleX;

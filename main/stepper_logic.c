@@ -51,7 +51,7 @@
 
 
 
-#define STEP_MOTOR_ENABLE_LEVEL  0 // DRV8825 is enabled on low level
+#define STEP_MOTOR_ENABLE_LEVEL  0
 #define STEP_MOTOR_SPIN_DIR_CLOCKWISE 1
 #define STEP_MOTOR_SPIN_DIR_COUNTERCLOCKWISE !STEP_MOTOR_SPIN_DIR_CLOCKWISE
 
@@ -63,14 +63,14 @@ uint8_t DO_ROTATE_ENABLED;
 #define DEFAULT_ACCEL_SAMPLES 3200*4
 #define DEFAULT_DECEL_SAMPLES 3200*4
 uint32_t accel_samplesx = DEFAULT_ACCEL_SAMPLES;
-uint32_t uniform_speed_hzx = 15000;
+uint32_t uniform_speed_hzx = 10000;
 uint32_t decel_samplesx = DEFAULT_DECEL_SAMPLES;
-uint32_t do_rotate_speed_hzx = 10000;
+uint32_t do_rotate_speed_hzx = 8000;
 
 uint32_t accel_samplesy = DEFAULT_ACCEL_SAMPLES;
-uint32_t uniform_speed_hzy = 15000;
+uint32_t uniform_speed_hzy = 10000;
 uint32_t decel_samplesy = DEFAULT_DECEL_SAMPLES;
-uint32_t do_rotate_speed_hzy = 10000;
+uint32_t do_rotate_speed_hzy = 8000;
 
 uint8_t delta_stepper_pos=71; //0.0999*
 

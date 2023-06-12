@@ -11,9 +11,9 @@
               <h1><span class="black--text">{{ elevation }}&deg;</span></h1>
               <span class="grey--text">Элевация</span>
               <br>
-              <h1><span class="black--text">{{ battery }} B</span></h1>
+              <!--<h1><span class="black--text">{{ battery }} B</span></h1>
               <span class="grey--text">Напряжение на батарее</span>
-              <br>
+              <br>-->
               <h3><span class="black--text">{{ setted_azimut }}&deg; {{ setted_elevation }}&deg;</span></h3>
               <span class="grey--text">Заданные значения</span>
               <br>
@@ -44,7 +44,7 @@ export default {
     return {
       azimut: 0,
       elevation: 0,
-      battery: 0,
+      //battery: 0,
       ws: null,
       prev_azimut: 0,
       setted_azimut: 0,
@@ -66,10 +66,14 @@ export default {
     }
   },
   created() {
+    const interval_id = window.setInterval(function () { }, Number.MAX_SAFE_INTEGER);
+    for (let i = 1; i < interval_id; i++) {
+      window.clearInterval(i);
+    }
     setInterval(() => {
       if (!this.joy_opened) {
         this.$ajax.get(`/api/v1/data/get/angles`).then((response) => {
-          this.battery = response.data.voltage.toFixed(2);
+          //this.battery = response.data.voltage.toFixed(2);
           this.azimut = response.data.azimut.toFixed(5);
           this.elevation = response.data.elevation.toFixed(5);
           this.setted_azimut = response.data.setted_azimut.toFixed(3);

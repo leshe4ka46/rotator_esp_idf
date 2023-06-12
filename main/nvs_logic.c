@@ -156,15 +156,15 @@ esp_err_t set_turns(int32_t vX, int32_t vY)
     nvs_close(ws);
     return ESP_OK;
 }
-int8_t get_turns(int32_t turnsX, int32_t turnsY)
+int8_t get_turns(int32_t *turnsX, int32_t *turnsY)
 {
     nvs_handle_t ws = open_nvs("turns", NVS_READONLY);
     if (curr_err)
     {
         set_turns(0, 0);
     }
-    check_err(nvs_get_i32(ws, "x", &turnsX));
-    check_err(nvs_get_i32(ws, "y", &turnsY));
+    check_err(nvs_get_i32(ws, "x", turnsX));
+    check_err(nvs_get_i32(ws, "y", turnsY));
     nvs_close(ws);
     return 1;
 }
@@ -179,19 +179,19 @@ esp_err_t set_delta(float vX, float vY)
     return ESP_OK;
 }
 
-int32_t deltaX, deltaY;
-int8_t get_delta(int32_t deltaX, int32_t deltaY)
+int8_t get_delta(float *deltaX, float *deltaY)
 {
+    int32_t tmp;
     nvs_handle_t ws = open_nvs("delta", NVS_READONLY);
     if (curr_err)
     {
         set_delta(0, 0);
     }
-    check_err(nvs_get_i32(ws, "x", &deltaX));
-    check_err(nvs_get_i32(ws, "y", &deltaY));
+    check_err(nvs_get_i32(ws, "x", &tmp));
+    *deltaX = (float)tmp/1000.0f;
+    check_err(nvs_get_i32(ws, "y", &tmp));
+    *deltaY = (float)tmp/1000.0f;
     nvs_close(ws);
-    deltaX /= 1000.0f;
-    deltaY /= 1000.0f;
     return 1;
 }
 
@@ -241,18 +241,45 @@ esp_err_t set_joy_delta(float vX, float vY)
     return ESP_OK;
 }
 
-int8_t get_joy_delta(int32_t _joy_deltaX, int32_t _joy_deltaY)
+int8_t get_joy_delta(float *_joy_deltaX, float *_joy_deltaY)
 {
+    int32_t tmp;
     nvs_handle_t ws = open_nvs("joydelta", NVS_READONLY);
     if (curr_err)
     {
         set_joy_delta(0, 0);
     }
-    check_err(nvs_get_i32(ws, "x", &_joy_deltaX));
-    check_err(nvs_get_i32(ws, "y", &_joy_deltaY));
+    check_err(nvs_get_i32(ws, "x", &tmp));
+    *_joy_deltaX = (float)tmp/1000.0f;
+    check_err(nvs_get_i32(ws, "y", &tmp));
+    *_joy_deltaY = (float)tmp/1000.0f;
     nvs_close(ws);
-    _joy_deltaX /= 1000.0f;
-    _joy_deltaY /= 1000.0f;
+    return 1;
+}
+
+esp_err_t set_delta_angles(float vX, float vY)
+{
+    nvs_handle_t ws = open_nvs("deltareal", NVS_READWRITE);
+    check_err(nvs_set_i32(ws, "x", (int32_t)(vX * 1000)));
+    check_err(nvs_set_i32(ws, "y", (int32_t)(vY * 1000)));
+    nvs_commit(ws);
+    nvs_close(ws);
+    return ESP_OK;
+}
+
+int8_t get_delta_angles(float *deltaX, float *deltaY)
+{
+    int32_t tmp;
+    nvs_handle_t ws = open_nvs("deltareal", NVS_READONLY);
+    if (curr_err)
+    {
+        set_delta(0, 0);
+    }
+    check_err(nvs_get_i32(ws, "x", &tmp));
+    *deltaX = (float)tmp/1000.0f;
+    check_err(nvs_get_i32(ws, "y", &tmp));
+    *deltaY = (float)tmp/1000.0f;
+    nvs_close(ws);
     return 1;
 }
 
