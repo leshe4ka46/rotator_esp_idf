@@ -60,15 +60,15 @@
 //#define DO_ROTATE_ENABLED 1
 uint8_t DO_ROTATE_ENABLED;
 
-#define DEFAULT_ACCEL_SAMPLES 3200*4
-#define DEFAULT_DECEL_SAMPLES 3200*4
+#define DEFAULT_ACCEL_SAMPLES 3200*8
+#define DEFAULT_DECEL_SAMPLES 3200*8
 uint32_t accel_samplesx = DEFAULT_ACCEL_SAMPLES;
-uint32_t uniform_speed_hzx = 10000;
+uint32_t uniform_speed_hzx = 15000;
 uint32_t decel_samplesx = DEFAULT_DECEL_SAMPLES;
 uint32_t do_rotate_speed_hzx = 8000;
 
 uint32_t accel_samplesy = DEFAULT_ACCEL_SAMPLES;
-uint32_t uniform_speed_hzy = 10000;
+uint32_t uniform_speed_hzy = 15000;
 uint32_t decel_samplesy = DEFAULT_DECEL_SAMPLES;
 uint32_t do_rotate_speed_hzy = 8000;
 
@@ -88,7 +88,7 @@ void stepperX_task(void *pvParameter)
 
     rmt_channel_handle_t motor_chan_x = NULL;
     rmt_tx_channel_config_t tx_chan_config_x = {
-        .clk_src = RMT_CLK_SRC_DEFAULT, // select clock source
+        .clk_src = RMT_CLK_SRC_XTAL, // select clock source
         .gpio_num = STEP_MOTOR_GPIO_STEPX,
         .mem_block_symbols = 64,
         .resolution_hz = STEP_MOTOR_RESOLUTION_HZ,
@@ -190,7 +190,7 @@ void stepperY_task(void *pvParameter)
 
 	rmt_channel_handle_t motor_chan_y = NULL;
 	rmt_tx_channel_config_t tx_chan_config_y = {
-		.clk_src = RMT_CLK_SRC_DEFAULT, // select clock source
+		.clk_src = RMT_CLK_SRC_XTAL, // select clock source
 		.gpio_num = STEP_MOTOR_GPIO_STEPY,
 		.mem_block_symbols = 64,
 		.resolution_hz = STEP_MOTOR_RESOLUTION_HZ,

@@ -43,8 +43,8 @@
         <v-container fill-height center style="font-size: 1.2em;" v-if="device == 1">
           <RotatorMain v-if="page == 0" :joy_opened="joystick_dialog"></RotatorMain>
           <keep-alive>
-            <RotatorDataset v-if="page == 1 && is_admin==true"></RotatorDataset>
-            <RotatorError text="Нужна авторизация" v-if="page == 1 && is_admin==false"/>
+            <RotatorDataset v-if="page == 1 && is_admin == true"></RotatorDataset>
+            <RotatorError text="Нужна авторизация" v-if="page == 1 && is_admin == false" />
           </keep-alive>
         </v-container>
         <v-container fill-height style="font-size: 1.2em;" v-if="device == 0">
@@ -76,11 +76,11 @@
 import { defineAsyncComponent } from 'vue';
 import RotatorLoading from './components/RotatorLoading.vue'
 import RotatorError from './components/RotatorError.vue'
-const RotatorAuth = defineAsyncComponent({loader: () => import('./components/RotatorAuth.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
-const RotatorSettings = defineAsyncComponent({loader: () => import('./components/RotatorSettings.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
-const RotatorMain = defineAsyncComponent({loader: () => import('./components/RotatorMain.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
-const RotatorDataset = defineAsyncComponent({loader: () => import('./components/RotatorDataset.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
-const RotatorMove = defineAsyncComponent({loader: () => import('./components/RotatorMove.vue'),loadingComponent: RotatorLoading,errorComponent: RotatorError, timeout: 3000});
+const RotatorAuth = defineAsyncComponent({ loader: () => import('./components/RotatorAuth.vue'), loadingComponent: RotatorLoading, errorComponent: RotatorError, timeout: 3000 });
+const RotatorSettings = defineAsyncComponent({ loader: () => import('./components/RotatorSettings.vue'), loadingComponent: RotatorLoading, errorComponent: RotatorError, timeout: 3000 });
+const RotatorMain = defineAsyncComponent({ loader: () => import('./components/RotatorMain.vue'), loadingComponent: RotatorLoading, errorComponent: RotatorError, timeout: 3000 });
+const RotatorDataset = defineAsyncComponent({ loader: () => import('./components/RotatorDataset.vue'), loadingComponent: RotatorLoading, errorComponent: RotatorError, timeout: 3000 });
+const RotatorMove = defineAsyncComponent({ loader: () => import('./components/RotatorMove.vue'), loadingComponent: RotatorLoading, errorComponent: RotatorError, timeout: 3000 });
 /*import RotatorAuth from './components/RotatorAuth.vue'
 import RotatorSettings from './components/RotatorSettings.vue'
 import RotatorMain from './components/RotatorMain.vue'
@@ -141,9 +141,11 @@ export default {
       this.settings_dialog = false
     })
     this.set_device()
-    setInterval(() => {
-      this.set_device()
-    }, 2500)
+    addEventListener("resize", () => { this.set_device() });
+    //setInterval(this.set_device, 1000)
+  },
+  mounted() {
+
   },
   components: {
     RotatorAuth, RotatorSettings, RotatorDataset, RotatorMain, RotatorMove, RotatorError
@@ -183,5 +185,11 @@ export default {
 <style>
 body::-webkit-scrollbar {
   width: 0px;
+}
+.mdi {
+  display: flex;
+  justify-content: center;
+  margin: auto;
+  text-align: center;
 }
 </style>

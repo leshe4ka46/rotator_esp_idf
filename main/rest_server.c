@@ -88,6 +88,7 @@ void slice(const char *str, char *result, size_t start, size_t end)
 }
 char filter[10];
 /* Send HTTP response with the contents of the requested file */
+uint8_t was_css=0;
 static esp_err_t rest_common_get_handler(httpd_req_t *req)
 {
     char filepath[FILE_PATH_MAX];
@@ -123,7 +124,8 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
         httpd_resp_send(req, "Redirect to the captive portal", HTTPD_RESP_USE_STRLEN);*/
         return ESP_OK;
     }
-    if (CHECK_FILE_EXTENSION(filepath, ".js"))
+    was_css=CHECK_FILE_EXTENSION(filepath, ".css");
+    if (CHECK_FILE_EXTENSION(filepath, ".js") || CHECK_FILE_EXTENSION(filepath, ".css"))
     {
         char newfp[FILE_PATH_MAX - 3];
         slice(filepath, newfp, 0, 140);
@@ -139,7 +141,9 @@ static esp_err_t rest_common_get_handler(httpd_req_t *req)
     }
 
     set_content_type_from_file(req, filepath);
-
+    if(was_css){
+        httpd_resp_set_type(req, "text/css");
+    }
     char *chunk = rest_context->scratch;
     ssize_t read_bytes;
     do
@@ -239,8 +243,14 @@ static esp_err_t rotate_angle(httpd_req_t *req)
 
     if (is_admin(key) == 77)
     {
-        absolute_stepper(0, angle_to_steps(azimut - delta_angleX + joy_delta_angleX));
-        absolute_stepper(1, angle_to_steps(elevation - delta_angleY + joy_delta_angleY));
+        if (azimut != -999)
+        {
+            absolute_stepper(0, angle_to_steps(azimut - delta_angleX + joy_delta_angleX));
+        }
+        if (elevation != -999)
+        {
+            absolute_stepper(1, angle_to_steps(elevation - delta_angleY + joy_delta_angleY));
+        }
         printf("angles: %f %f \r\n", azimut, elevation);
     }
 
@@ -288,11 +298,11 @@ static esp_err_t angles_joystick(httpd_req_t *req)
                 joy_delta_angleY += (float)angle;
             }
         }
-        set_joy_delta(joy_delta_angleX,joy_delta_angleY);
-        ESP_LOGI("joy_delta_angle","%f %f",joy_delta_angleX,joy_delta_angleY);
-        get_joy_delta(&joy_delta_angleX,&joy_delta_angleY);
-        ESP_LOGI("joy_delta_angle_get","%f %f",joy_delta_angleX,joy_delta_angleY);
-        ESP_LOGI("angles","%f %f",(float)steps_to_angle*get_pos(0),(float)steps_to_angle*get_pos(1));
+        set_joy_delta(joy_delta_angleX, joy_delta_angleY);
+        ESP_LOGI("joy_delta_angle", "%f %f", joy_delta_angleX, joy_delta_angleY);
+        get_joy_delta(&joy_delta_angleX, &joy_delta_angleY);
+        ESP_LOGI("joy_delta_angle_get", "%f %f", joy_delta_angleX, joy_delta_angleY);
+        ESP_LOGI("angles", "%f %f", (float)steps_to_angle * get_pos(0), (float)steps_to_angle * get_pos(1));
     }
 
     cJSON_Delete(root);
@@ -524,7 +534,7 @@ static esp_err_t anglesdatatx(httpd_req_t *req)
     cJSON *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "azimut", (as5600_getAngleX() / STEPPERS_GEAR_RATIO + delta_angleX - joy_delta_angleX));
     cJSON_AddNumberToObject(root, "elevation", (as5600_getAngleY() / STEPPERS_GEAR_RATIO + delta_angleY - joy_delta_angleY));
-    //cJSON_AddNumberToObject(root, "voltage", 0.00);
+    // cJSON_AddNumberToObject(root, "voltage", 0.00);
     cJSON_AddNumberToObject(root, "setted_azimut", ((float)steps_to_angle * get_pos(0) + delta_angleX - joy_delta_angleX));
     cJSON_AddNumberToObject(root, "setted_elevation", ((float)steps_to_angle * get_pos(1) + delta_angleY - joy_delta_angleY));
     cJSON_AddNumberToObject(root, "is_ready", motor_isready());
@@ -564,7 +574,7 @@ static esp_err_t authuser(httpd_req_t *req)
     const char *login = cJSON_GetObjectItem(root, "login")->valuestring;
     const char *password = cJSON_GetObjectItem(root, "password")->valuestring;
 
-    if ((strcmp("admin", login) + strcmp("admin", password)) == 0)
+    if ((strcmp("AhvizsLFLYbN6Dnc", login) + strcmp("HC3v1ScH54hTT", password)) == 0)
     {
         set_user(key, 77);
         httpd_resp_sendstr(req, "{\"role\":\"admin\"}");
@@ -644,8 +654,15 @@ static esp_err_t reset_as5600(httpd_req_t *req)
     const char *key = cJSON_GetObjectItem(root, "key")->valuestring;
     if (is_admin(key) == 77)
     {
-        reset_all_positions();
-        httpd_resp_sendstr(req, "{\"response\":1}");
+        if (motor_isready())
+        {
+            reset_all_positions();
+            httpd_resp_sendstr(req, "{\"response\":1}");
+        }
+        else
+        {
+            httpd_resp_sendstr(req, "{\"error\":\"motor is moving\"}");
+        }
     }
     else
     {
@@ -1000,8 +1017,7 @@ esp_err_t start_rest_server(const char *base_path)
         .uri = "/api/v1/data/set/dorotate",
         .method = HTTP_POST,
         .handler = set_dorotate,
-        .user_ctx = rest_context
-        };
+        .user_ctx = rest_context};
     httpd_register_uri_handler(server, &data_set_dorotate_uri);
 
     httpd_uri_t data_set_angles_uri = {

@@ -4,13 +4,14 @@
     "private": true,
     "scripts": {
         "serve": "vue-cli-service serve",
-        "build": "vue-cli-service build && npm run gzipjs && npm run replace",
+        "build": "vue-cli-service build && npm run gzipjs && npm run gzipcss && npm run replace",
         "lint": "vue-cli-service lint",
         "fix": "eslint ./src/* --fix  && npm run fix2",
         "fix2": "eslint ./src/components/* --fix",
-        "gzip": "cd dist/js && sudo 7z a -tgzip app.js.gz app.js && rm -rf app.js",
-        "gzipjs": "cd dist/js && for f in ./*.js; do sudo 7z a -tgzip $f.gz $f; done && rm -rf *.js",
-        "replace": "cd dist && sudo sed -i -e 's/js\"/js.gz\"/g' index.html"
+        "gzip": "cd dist/js && 7z a -tgzip app.js.gz app.js && rm -rf app.js",
+        "gzipjs": "cd dist/js && for f in ./*.js; do 7z a -tgzip $f.gz $f; done && rm -rf *.js",
+        "gzipcss": "cd dist/css && for f in ./*.css; do 7z a -tgzip $f.gz $f; done && rm -rf *.css",
+        "replace": "cd dist && sed -i -e 's/js\"/js.gz\"/g' index.html"
     },
     "dependencies": {
         "@material-design-icons/svg": "^0.13.0",
@@ -31,6 +32,7 @@
         "babel-eslint": "^10.0.1",
         "eslint": "^7.5.0",
         "eslint-plugin-vue": "^9.6.0",
+        "mini-css-extract-plugin": "^2.7.6",
         "stylus": "^0.54.5",
         "stylus-loader": "^3.0.1",
         "vue-cli-plugin-vuetify": "^0.5.0",
@@ -57,8 +59,6 @@
         }
     },
     "browserslist": [
-        "> 1%",
-        "last 2 versions",
-        "not ie <= 8"
+        "last 2 years"
     ]
 }

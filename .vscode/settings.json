@@ -10,7 +10,9 @@
         "*.ipp": "c",
         "*.tcc": "c",
         "sstream": "c",
-        "regex": "c"
+        "regex": "c",
+        "freertos.h": "c",
+        "task.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled",
     "cmake.configureOnOpen": false,
